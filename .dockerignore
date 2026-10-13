@@ -1,0 +1,10 @@
+node_modules
+dist
+cache
+.env*
+*.qloo.json
+.git
+.claude
+.codex
+.agents
+.aws

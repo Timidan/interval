@@ -1,0 +1,15 @@
+# Optional overlay for live agent answers: joins the network the Hermes gateway is on.
+#   docker compose -f deploy/compose.yaml -f deploy/compose.hermes.yaml up -d --build
+services:
+  interval-api:
+    environment:
+      HERMES_URL: ${HERMES_URL:-http://hermes:8080}
+      HERMES_BUDGET_ID: ${HERMES_BUDGET_ID:?set HERMES_BUDGET_ID to a fresh budget name}
+      HERMES_BUDGET_CALLS: ${HERMES_BUDGET_CALLS:-60}
+    networks:
+      - hermes
+
+networks:
+  hermes:
+    external: true
+    name: ${HERMES_NETWORK:?set HERMES_NETWORK to the Docker network the Hermes gateway is on}

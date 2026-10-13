@@ -1,0 +1,37 @@
+programme_day,stage,act,start_local,end_local,end_status
+2026-10-02,T-Mobile,Asleep at the Wheel,2026-10-02T13:00,2026-10-02T13:45,printed
+2026-10-02,T-Mobile,New Constellations,2026-10-02T14:30,2026-10-02T15:15,printed
+2026-10-02,T-Mobile,Jesse Welles,2026-10-02T16:15,2026-10-02T17:15,printed
+2026-10-02,T-Mobile,Turnstile,2026-10-02T18:15,2026-10-02T19:15,printed
+2026-10-02,T-Mobile,Skrillex,2026-10-02T20:15,2026-10-02T22:00,not printed; grid block runs to the 10 PM line
+2026-10-02,Miller Lite,Faouzia,2026-10-02T13:45,2026-10-02T14:30,printed
+2026-10-02,Miller Lite,Paris Paloma,2026-10-02T15:15,2026-10-02T16:15,printed
+2026-10-02,Miller Lite,Brandon Flowers,2026-10-02T17:15,2026-10-02T18:15,printed
+2026-10-02,Miller Lite,Leon Thomas,2026-10-02T19:15,2026-10-02T20:15,printed
+2026-10-02,BMI,Elle Coves,2026-10-02T13:45,2026-10-02T14:30,printed
+2026-10-02,BMI,Izzy Escobar,2026-10-02T15:30,2026-10-02T16:15,printed
+2026-10-02,BMI,Grocery Bag,2026-10-02T17:15,2026-10-02T18:15,printed
+2026-10-02,Beatbox,Night Traveler,2026-10-02T14:00,2026-10-02T14:45,printed
+2026-10-02,Beatbox,Marlon Funaki,2026-10-02T15:30,2026-10-02T16:30,printed
+2026-10-02,Beatbox,Rusowsky,2026-10-02T17:30,2026-10-02T18:30,printed
+2026-10-02,Beatbox,Molly Santana,2026-10-02T19:30,2026-10-02T20:30,printed
+2026-10-02,Tito's Handmade Vodka,The 4411,2026-10-02T12:45,2026-10-02T13:30,printed
+2026-10-02,Tito's Handmade Vodka,Solomon Hicks,2026-10-02T14:00,2026-10-02T14:45,printed
+2026-10-02,Tito's Handmade Vodka,Bo Staloch,2026-10-02T15:15,2026-10-02T16:00,printed
+2026-10-02,Tito's Handmade Vodka,Rebecca Black,2026-10-02T16:30,2026-10-02T17:30,printed
+2026-10-02,Tito's Handmade Vodka,Steve Aoki,2026-10-02T18:30,2026-10-02T19:30,printed
+2026-10-02,Tito's Handmade Vodka,Silent Disco,2026-10-02T20:00,2026-10-02T22:00,printed (not an act; exclude from scoring)
+2026-10-02,Snapchat,Elijah Delgado,2026-10-02T14:00,2026-10-02T14:45,printed
+2026-10-02,Snapchat,LP,2026-10-02T15:30,2026-10-02T16:30,printed
+2026-10-02,Snapchat,Bunt.,2026-10-02T17:30,2026-10-02T18:30,printed
+2026-10-02,Snapchat,The Chainsmokers,2026-10-02T19:30,2026-10-02T20:30,printed
+2026-10-02,Bonus Tracks,Cowboy Can Can,2026-10-02T15:00,2026-10-02T15:30,printed
+2026-10-02,Bonus Tracks,Steve Aoki with Mack,2026-10-02T17:00,2026-10-02T17:30,printed (second Steve Aoki set; identity is the same artist)
+2026-10-02,American Express,Hunx and His Punx,2026-10-02T13:15,2026-10-02T14:00,printed
+2026-10-02,American Express,CMAT,2026-10-02T14:45,2026-10-02T15:30,printed
+2026-10-02,American Express,Amyl and the Sniffers,2026-10-02T16:30,2026-10-02T17:30,printed
+2026-10-02,American Express,Labrinth,2026-10-02T18:30,2026-10-02T19:30,printed
+2026-10-02,American Express,Charli XCX,2026-10-02T20:35,2026-10-02T22:00,not printed; grid block runs to the 10 PM line
+2026-10-02,Austin Kiddie Limits,Sonia de los Santos,2026-10-02T13:30,2026-10-02T14:00,printed (kids' area; exclude from scoring)
+2026-10-02,Austin Kiddie Limits,School of Rock,2026-10-02T14:45,2026-10-02T15:15,printed (kids' area; exclude from scoring)
+2026-10-02,Austin Kiddie Limits,Wild Child,2026-10-02T16:30,2026-10-02T17:00,printed (kids' area; exclude from scoring)

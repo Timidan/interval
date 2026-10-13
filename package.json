@@ -1,0 +1,35 @@
+{
+  "name": "interval",
+  "private": true,
+  "license": "MIT",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4190 --strictPort",
+    "build": "tsc -b && vite build",
+    "check": "tsc -b --pretty false",
+    "server": "node server/index.mjs",
+    "dev:all": "node scripts/dev-all.mjs",
+    "test:server": "node --test server/solver.test.mjs",
+    "baseline:llm": "node scripts/llm-baseline.mjs",
+    "demo:agent": "node scripts/agent-demo.mjs"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.7",
+    "@tailwindcss/vite": "^4.3.3",
+    "cn": "^0.4.0",
+    "motion": "^13.4.1",
+    "ogl": "^1.0.11",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "4.7.0",
+    "typescript": "5.7.3",
+    "vite": "6.4.3"
+  }
+}

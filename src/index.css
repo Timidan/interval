@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+/* Direction "Side-stage". See DESIGN.md in the research folder. */
+@theme {
+  --color-stage: oklch(0.159 0.011 267.979);
+  --color-haze: oklch(0.222 0.023 265.578);
+  --color-paper: oklch(0.995 0.002 90);
+  --color-paper-2: oklch(0.97 0.003 265);
+  --color-paper-line: oklch(0.91 0.005 265);
+  --color-ink: oklch(0.2 0.009 264.36);
+  --color-ink-2: oklch(0.366 0.015 259.811);
+  --color-chalk: oklch(0.955 0.016 79.351);
+  --color-chalk-2: oklch(0.955 0.016 79.351 / 0.75);
+  --color-gel: oklch(0.824 0.149 73.346);
+  --color-gel-ink: oklch(0.176 0.022 70.605);
+  --color-marker: oklch(0.536 0.192 29.464);
+  --color-marker-ink: oklch(0.42 0.16 28);
+  --color-marker-dark: oklch(0.709 0.183 27.67);
+  --color-cue: oklch(0.493 0.118 154.822);
+  --color-cue-ink: oklch(0.37 0.09 155);
+  /* Calendar events for acts Qloo identifies: a calm blue, like a default calendar. */
+  --color-event: oklch(0.56 0.2 258);
+  --color-event-ink: oklch(0.36 0.14 260);
+  --color-cue-dark: oklch(0.8 0.182 151.711);
+  --color-highlight: oklch(0.944 0.175 116.52);
+  --color-highlight-strong: oklch(0.919 0.219 120.284);
+  --color-tape: oklch(0.239 0.008 264.408);
+  --color-unknown: oklch(0.574 0.017 260.716);
+  --font-sans: "General Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Panchang", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  --font-narrow: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --ease-push: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Context tokens used by the vendored SmoothUI components. Dark (stage) by default; .paper flips them. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+}
+:root {
+  --background: var(--color-haze);
+  --foreground: var(--color-chalk);
+  --muted: oklch(0.268 0.026 262.618);
+  --muted-foreground: var(--color-chalk-2);
+  --border: oklch(0.317 0.031 263.984);
+  --ring: var(--color-gel);
+  --brand: var(--color-gel);
+  color-scheme: dark;
+}
+.paper {
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --muted: var(--color-paper-2);
+  --muted-foreground: var(--color-ink-2);
+  --border: var(--color-paper-line);
+  --ring: var(--color-ink);
+  --brand: var(--color-ink);
+  color-scheme: light;
+}
+
+html { font-size: 16px; }
+@media (min-width: 1680px) { html { font-size: 17px; } }
+@media (min-width: 2200px) { html { font-size: 19px; } }
+body { background: var(--color-stage); color: var(--color-chalk); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.tnum { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--color-gel); outline-offset: 3px; }
+.paper :focus-visible { outline-color: var(--color-event); }
+
+/* Calendar events, in the Apple Calendar grammar: a tint of the state colour, a solid leading bar,
+   stripes for acts Qloo can't identify (like unconfirmed invitations), solid fill when selected.
+   --tone and --tone-ink are set per set by the sheet. */
+.event { background-color: color-mix(in oklch, var(--tone) 13%, transparent); color: var(--tone-ink); }
+.event.stripes { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in oklch, var(--tone) 16%, transparent) 5px 7px); }
+.event-bar { background-color: var(--tone); }
+.event-time { color: color-mix(in oklch, var(--tone-ink) 85%, transparent); }
+.event[data-selected] { background-color: var(--tone-solid, var(--tone)); background-image: none; color: oklch(1 0 0); }
+.event[data-selected] .event-bar { background-color: oklch(1 0 0 / 0.7); }
+.event[data-selected] .event-time { color: oklch(1 0 0 / 0.85); }
+.event[data-together] { box-shadow: 0 0 0 2px var(--tone); }
+
+
+/* Inspira UI motion, as CSS so it runs on the compositor. */
+.blur-reveal { opacity: 0; transform: translateY(22px); filter: blur(16px); transition: opacity 0.8s var(--ease-push), transform 0.8s var(--ease-push), filter 0.8s var(--ease-push); }
+.blur-reveal.is-shown { opacity: 1; transform: none; filter: none; }
+@media (prefers-reduced-motion: reduce) {
+  .blur-reveal { transition: none; opacity: 1; transform: none; filter: none; }
+}
+
+/* Text drawn by the stage shader keeps its DOM copy for selection and screen readers, but invisible. */
+[data-shader-text="on"] { color: transparent; }
+/* Outline display type: the footage shows through the letters. */
+.outline-type { color: transparent; -webkit-text-stroke: 1.5px color-mix(in oklch, var(--color-chalk) 85%, transparent); }
+@supports not (-webkit-text-stroke: 1px black) { .outline-type { color: var(--color-chalk); } }
+/* Shared film grain so interface text sits in the same image as the shader. */
+.grain-overlay { position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: 0.06; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+/* Entry cascade: children rise and sharpen in turn (--i sets the order). CSS, so it runs on the compositor. */
+.rise { animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 100ms + 60ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(28px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+.rise-side { animation: rise-side 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 100ms + 60ms); }
+@keyframes rise-side { from { opacity: 0; transform: translate(48px, 28px) rotate(2deg); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+/* The taped sheet drifts a few pixels, like paper in moving air. */
+.float { animation: float 7s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-6px); } }
+/* Lineup marquee: two identical halves, so -50% loops without a seam. */
+.marquee { animation: marquee 80s linear infinite; }
+.marquee-wrap:hover .marquee { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+/* Skeleton shimmer for loading states. */
+.shimmer { --shine: var(--color-ink); background: linear-gradient(90deg, color-mix(in oklch, var(--shine) 6%, transparent) 0%, color-mix(in oklch, var(--shine) 14%, transparent) 40%, color-mix(in oklch, var(--shine) 6%, transparent) 80%) 0 0 / 200% 100%; animation: shimmer 1.4s linear infinite; }
+.shimmer-dark { --shine: var(--color-chalk); background: linear-gradient(90deg, color-mix(in oklch, var(--shine) 5%, transparent) 0%, color-mix(in oklch, var(--shine) 14%, transparent) 40%, color-mix(in oklch, var(--shine) 5%, transparent) 80%) 0 0 / 200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+/* A highlighter stroke drawn across Qloo evidence. */
+.highlight-swipe { background: linear-gradient(var(--color-highlight), var(--color-highlight)) no-repeat 0 0 / 0% 100%; animation: swipe 0.6s 0.3s var(--ease-push) forwards; }
+@keyframes swipe { to { background-size: 100% 100%; } }
+.drawer-in { animation: drawer-in 0.5s var(--ease-push) both; }
+@keyframes drawer-in { from { transform: translateX(48px); opacity: 0; } }
+.fade-in { animation: fade-in 0.3s ease both; }
+@keyframes fade-in { from { opacity: 0; } }
+.drawer-out { animation: drawer-out 0.18s ease-out both; }
+@keyframes drawer-out { to { transform: translateX(24px); opacity: 0; } }
+.fade-out { animation: fade-out 0.18s ease-out both; }
+@keyframes fade-out { to { opacity: 0; } }
+.caret { animation: caret 1.05s steps(1) infinite; }
+/* The page's pause control stops every ambient loop. */
+[data-motion="paused"] :is(.marquee, .float, .caret) { animation-play-state: paused; }
+@keyframes caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .rise, .rise-side, .float, .marquee, .shimmer, .shimmer-dark, .drawer-in, .fade-in, .drawer-out, .fade-out, .caret { animation: none; }
+  .highlight-swipe { animation: none; background-size: 100% 100%; }
+}

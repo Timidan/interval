@@ -1,0 +1,47 @@
+# Interval behind the shared edge proxy: `interval-web` joins public_proxy, the API stays on an internal network.
+# INTERVAL_ENV_FILE holds QLOO_BASE_URL and QLOO_API_KEY (mode 600). INTERVAL_CACHE_DIR is the private cache:
+# qloo.sqlite, snapshots/, baselines/comparison.json and probes/genre-baseline.json. Neither belongs in the repository.
+name: interval
+
+services:
+  interval-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: api
+    restart: unless-stopped
+    user: "1000:1000"
+    # A shared host: repair searches are CPU-bound worker threads, so cap what Interval can take.
+    cpus: 1.5
+    mem_limit: 1g
+    env_file: ${INTERVAL_ENV_FILE:?set INTERVAL_ENV_FILE to the Qloo credentials file}
+    environment:
+      TRUST_PROXY: "1"
+      # 1 serves saved Qloo evidence only and makes no new Qloo calls.
+      QLOO_OFFLINE: ${QLOO_OFFLINE:-0}
+    volumes:
+      - ${INTERVAL_CACHE_DIR:?set INTERVAL_CACHE_DIR to the private cache directory}:/app/cache
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4191/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  interval-web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: web
+    restart: unless-stopped
+    depends_on:
+      - interval-api
+    networks:
+      - internal
+      - public_proxy
+
+networks:
+  internal: {}
+  public_proxy:
+    external: true
