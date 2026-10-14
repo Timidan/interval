@@ -68,4 +68,4 @@ CSV import columns: `day, stage, act, start, end`, with optional `hold` (day, st
 
 ## Licence
 
-MIT. See `LICENSE`.
+MIT for the code; see `LICENSE`. The stage footage in `public/media/` stays under the Mixkit Stock Video Free License.
