@@ -79,28 +79,30 @@ function Warnings({ run, strong, onOpen, onRule, busy }: { run: Run; strong: Cla
       <h2 className="flex items-center gap-2 font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">
         <Intersect size={18} weight="duotone" className="text-marker-dark" />Clash warnings
       </h2>
-      {strong.length ? (
-        <ul className="mt-3 divide-y divide-chalk/10">
-          {strong.map((c, i) => (
-            <li key={c.setIds.join()} className="rise" style={{ '--i': i } as React.CSSProperties}>
-              <button type="button" onClick={() => onOpen(c)} className="group flex w-full flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 text-start">
-                <span className="font-narrow text-[1.375rem] font-semibold uppercase leading-tight">{c.acts[0]} × {c.acts[1]}</span>
-                <span className="font-mono text-[0.75rem] text-chalk-2 tnum">
-                  {c.overlapMinutes} min overlap · weight {(c.weight ?? 0).toFixed(2)} · <span className="text-gel underline-offset-4 group-hover:underline">Evidence</span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : <p className="mt-3 text-[0.9375rem] text-chalk-2">No strong clash among the acts Qloo identifies.</p>}
-      <p className="mt-2 text-[0.8125rem] leading-[1.6] text-chalk-2">
-        {plural(unknown, 'overlapping pair includes', 'overlapping pairs include')} an act Qloo can’t identify. They stay unknown, never zero.{' '}
-        {net ? 'Looser rule: a tested change can’t add to their total overlap, though single pairs can shift.' : 'Strict rule: a tested change can’t add overlap to any of them.'}{' '}
-        <button type="button" disabled={busy} onClick={() => onRule(net ? 'pair' : 'net')}
-          className="font-medium text-chalk underline decoration-chalk/35 underline-offset-4 hover:decoration-chalk disabled:cursor-not-allowed disabled:opacity-45">
-          {net ? 'Use the strict rule' : 'Use the looser rule'}
-        </button>
-      </p>
+      {!run.snapshot ? <p className="mt-3 text-[0.9375rem] text-chalk-2">Clash warnings need Qloo evidence, and none is loaded for this day.</p> : <>
+        {strong.length ? (
+          <ul className="mt-3 divide-y divide-chalk/10">
+            {strong.map((c, i) => (
+              <li key={c.setIds.join()} className="rise" style={{ '--i': i } as React.CSSProperties}>
+                <button type="button" onClick={() => onOpen(c)} className="group flex w-full flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 text-start">
+                  <span className="font-narrow text-[1.375rem] font-semibold uppercase leading-tight">{c.acts[0]} × {c.acts[1]}</span>
+                  <span className="font-mono text-[0.75rem] text-chalk-2 tnum">
+                    {c.overlapMinutes} min overlap · weight {(c.weight ?? 0).toFixed(2)} · <span className="text-gel underline-offset-4 group-hover:underline">Evidence</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="mt-3 text-[0.9375rem] text-chalk-2">No strong clash among the acts Qloo identifies.</p>}
+        <p className="mt-2 text-[0.8125rem] leading-[1.6] text-chalk-2">
+          {plural(unknown, 'overlapping pair includes', 'overlapping pairs include')} an act Qloo can’t identify. They stay unknown, never zero.{' '}
+          {net ? 'Looser rule: a tested change can’t add to their total overlap, though single pairs can shift.' : 'Strict rule: a tested change can’t add overlap to any of them.'}{' '}
+          <button type="button" disabled={busy} onClick={() => onRule(net ? 'pair' : 'net')}
+            className="font-medium text-chalk underline decoration-chalk/35 underline-offset-4 hover:decoration-chalk disabled:cursor-not-allowed disabled:opacity-45">
+            {net ? 'Use the strict rule' : 'Use the looser rule'}
+          </button>
+        </p>
+      </>}
     </section>
   );
 }
