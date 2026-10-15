@@ -75,7 +75,7 @@ function Warnings({ run, strong, onOpen, onRule, busy }: { run: Run; strong: Cla
   const unknown = run.clashes.filter(c => c.weight == null).length;
   const net = run.schedule.unknownGuard === 'net';
   return (
-    <section aria-label="Clash warnings" className={panel}>
+    <section id="clash-warnings" aria-label="Clash warnings" className={cn(panel, 'scroll-mt-5')}>
       <h2 className="flex items-center gap-2 font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">
         <Intersect size={18} weight="duotone" className="text-marker-dark" />Clash warnings
       </h2>
@@ -84,10 +84,13 @@ function Warnings({ run, strong, onOpen, onRule, busy }: { run: Run; strong: Cla
           <ul className="mt-3 divide-y divide-chalk/10">
             {strong.map((c, i) => (
               <li key={c.setIds.join()} className="rise" style={{ '--i': i } as React.CSSProperties}>
-                <button type="button" onClick={() => onOpen(c)} className="group flex w-full flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 text-start">
+                <button type="button" onClick={() => onOpen(c)} className="group flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 text-start">
                   <span className="font-narrow text-[1.375rem] font-semibold uppercase leading-tight">{c.acts[0]} × {c.acts[1]}</span>
-                  <span className="font-mono text-[0.75rem] text-chalk-2 tnum">
-                    {c.overlapMinutes} min overlap · weight {(c.weight ?? 0).toFixed(2)} · <span className="text-gel underline-offset-4 group-hover:underline">Evidence</span>
+                  <span className="inline-flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <span className="font-mono text-[0.75rem] text-chalk-2 tnum">{c.overlapMinutes} min overlap · Qloo link {(c.weight ?? 0).toFixed(2)}</span>
+                    <span className="inline-flex h-9 items-center gap-1.5 rounded-[3px] border border-gel/45 px-3 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-gel transition-colors duration-150 group-hover:border-gel group-hover:bg-gel/10">
+                      See Qloo evidence<ArrowRight aria-hidden="true" size={12} weight="bold" />
+                    </span>
                   </span>
                 </button>
               </li>
@@ -121,12 +124,6 @@ function Proposal({ repair, n, total, shown, onShow, onApply }: { repair: Repair
         <h2 className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">Tested change {n} of {total}</h2>
         {repair.validity.passed && <span className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.1em] text-cue-dark"><Check size={14} weight="bold" />Keeps every hold</span>}
       </div>
-      {unknown.length > 0 && (
-        <p className="mt-3 text-[0.8125rem] leading-[1.6] text-chalk-2">
-          {repair.unknownGuard === 'net' ? 'Looser rule: overlap' : 'Overlap'} with acts Qloo can’t identify changes for {pairs}.{' '}
-          {unknownTotal(repair.before.unknownMinutes, repair.after.unknownMinutes)}
-        </p>
-      )}
       <ul className="mt-4 space-y-2">
         {repair.changes.map(c => (
           <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -145,6 +142,12 @@ function Proposal({ repair, n, total, shown, onShow, onApply }: { repair: Repair
           </div>
         ))}
       </dl>
+      {unknown.length > 0 && (
+        <p className="mt-3 text-[0.8125rem] leading-[1.6] text-chalk-2">
+          {repair.unknownGuard === 'net' ? 'Looser rule: overlap' : 'Overlap'} with acts Qloo can’t identify changes for {pairs}.{' '}
+          {unknownTotal(repair.before.unknownMinutes, repair.after.unknownMinutes)}
+        </p>
+      )}
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button type="button" onClick={onApply} className={buttonClass('primary', 'h-11 px-5')}>Apply this change</button>
         <button type="button" aria-pressed={shown} onClick={onShow} className={buttonClass('ghost', cn('h-11 px-4', shown && 'border-chalk/70 bg-chalk/10'))}>
@@ -165,6 +168,7 @@ function clashesAfter(strong: Clash[], repair: Repair) {
   return ids;
 }
 
+const applyPill = 'inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-[0.8125rem] font-semibold text-paper transition-[background-color,scale] duration-150 hover:bg-ink/85 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-45';
 const capsule = 'inline-flex h-10 items-center gap-2 rounded-full bg-paper-2 px-4 text-[0.8125rem] font-semibold text-ink ring-1 ring-paper-line transition-[background-color,scale] duration-150 hover:bg-paper-line/60 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-45';
 
 export function SheetPage() {
@@ -210,6 +214,9 @@ export function SheetPage() {
     : shownGhosts ? 'Change applied.' : '';
 
   const reset = () => { setPinned(null); setPick(undefined); setNotice(''); };
+  const apply = async (r: Repair) => {
+    if (run && await act({ type: 'apply', expectedVersion: run.version, repairId: r.id })) { setGhosts({ seed: run.id, slots: r.changes.map(c => sheetSlot(c.before)) }); setPick(undefined); setNotice(''); }
+  };
   const repair = (unknownGuard?: UnknownGuard) => {
     if (!run) return;
     reset();
@@ -261,8 +268,8 @@ export function SheetPage() {
         <Stat label="Sets" value={current.sets.length} />
         <Stat label="Overlapping pairs" value={pairs} />
         <Stat label="Acts Qloo identifies" value={run ? run.coverage.confirmed : null} note={run ? `of ${run.coverage.acts} ${runId ? 'in this running order' : 'on this day'}` : undefined} />
-        <Stat label="Strong clashes" value={run?.metrics ? run.metrics.strongClashes : null} note={run?.metrics ? undefined : 'Needs Qloo evidence'} />
-        <Stat label="Qloo-weighted clash minutes" value={run?.metrics ? Math.round(run.metrics.cost) : null} note={run?.metrics ? undefined : 'Needs Qloo evidence'} />
+        <Stat label="Strong clashes" value={run?.metrics ? run.metrics.strongClashes : null} after={preview?.after.strongClashes} note={run?.metrics ? 'Linked acts playing at once' : 'Needs Qloo evidence'} />
+        <Stat label="Qloo-weighted clash minutes" value={run?.metrics ? Math.round(run.metrics.cost) : null} after={preview ? Math.round(preview.after.cost) : undefined} note={run?.metrics ? 'Overlap minutes × how closely Qloo links the acts' : 'Needs Qloo evidence'} />
       </section>
 
       <main id="running-order" tabIndex={-1} className="rise mx-auto mt-8 grid max-w-[112rem] grid-cols-[minmax(0,1fr)] gap-5 px-5 pb-24 lg:grid-cols-[minmax(0,1fr)_23rem]" style={{ '--i': 2 } as React.CSSProperties}>
@@ -279,9 +286,48 @@ export function SheetPage() {
                     <Eye aria-hidden="true" size={13} weight="bold" />Preview of tested change {previewN} · not applied
                   </span>
                 )}
+                {!preview && strong.length === 1 && (
+                  <button type="button" onClick={() => openEvidence(strong[0])} className="inline-flex items-center gap-1.5 rounded-full bg-marker/10 px-3 py-1.5 text-[0.75rem] font-semibold text-marker-ink ring-1 ring-marker/25 transition-colors duration-150 hover:bg-marker/15">
+                    <Intersect aria-hidden="true" size={13} weight="bold" />Strong clash: {strong[0].acts.join(' × ')} · See evidence
+                  </button>
+                )}
+                {!preview && strong.length > 1 && (
+                  <a href="#clash-warnings" className="inline-flex items-center gap-1.5 rounded-full bg-marker/10 px-3 py-1.5 text-[0.75rem] font-semibold text-marker-ink ring-1 ring-marker/25 transition-colors duration-150 hover:bg-marker/15">
+                    <Intersect aria-hidden="true" size={13} weight="bold" />{strong.length} strong clashes · See the list
+                  </a>
+                )}
                 <Legend moved={!!sheetGhosts?.length} before={preview ? 'Where it plays now' : 'Where it was'} />
               </div>
             </div>
+            {preview && run && (
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[14px] bg-cue/10 px-4 py-3 text-ink ring-1 ring-cue/25">
+                <div className="min-w-0">
+                  <p className="text-[0.9375rem] font-semibold leading-snug">
+                    {preview.changes.map(c => `${c.act} ${c.before.stage === c.after.stage ? '' : `${c.before.stage} → ${c.after.stage}, `}${at(c.before)} → ${at(c.after)}`).join(' · ')}
+                  </p>
+                  <p className="mt-1 text-[0.8125rem] leading-snug text-ink-2 tnum">
+                    Strong clashes {preview.before.strongClashes} → {preview.after.strongClashes} · weighted minutes {Math.round(preview.before.cost)} → {Math.round(preview.after.cost)}{preview.validity.passed ? ' · keeps every hold' : ''}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" disabled={busy} onClick={() => void apply(preview)} className={applyPill}><Check aria-hidden="true" size={15} weight="bold" />Apply this change</button>
+                  {run.repairs.length > 1 && (
+                    <button type="button" onClick={() => setPick(run.repairs[previewN % run.repairs.length].id)} className={capsule}>
+                      Next change <span className="font-normal text-ink-2 tnum">{previewN % run.repairs.length + 1} of {run.repairs.length}</span>
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setPick(null)} className={capsule}>Hide preview</button>
+                </div>
+              </div>
+            )}
+            {!preview && run?.canUndo && (
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[14px] bg-paper-2 px-4 py-3 text-ink ring-1 ring-paper-line">
+                <p className="text-[0.875rem] leading-snug text-ink-2">{shownGhosts ? 'Change applied. Dashed outlines show where the moved sets were; green shows where they play now.' : 'A tested change is applied.'}</p>
+                <button type="button" disabled={busy} onClick={() => { setNotice(''); void act({ type: 'undo', expectedVersion: run.version }); }} className={capsule}>
+                  <ArrowCounterClockwise aria-hidden="true" size={15} weight="bold" />Undo the last change
+                </button>
+              </div>
+            )}
             {runId && !run ? (
               <div role="status" aria-label="Loading the running order" className="space-y-3">
                 {[0, 1, 2, 3].map(i => <div key={i} className="shimmer h-12 rounded-[7px]" />)}
@@ -335,17 +381,7 @@ export function SheetPage() {
               setPick(show ? r.id : null);
               if (show) card.current?.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
             }}
-            onApply={async () => {
-              if (await act({ type: 'apply', expectedVersion: run.version, repairId: r.id })) { setGhosts({ seed: run.id, slots: r.changes.map(c => sheetSlot(c.before)) }); setPick(undefined); setNotice(''); }
-            }} />)}
-          {shownGhosts && !preview && (
-            <p className="rise text-[0.8125rem] leading-[1.6] text-chalk-2">Applied. Dashed outlines show where the moved sets were; green shows where they play now.</p>
-          )}
-          {run?.canUndo && (
-            <button type="button" onClick={() => { setNotice(''); void act({ type: 'undo', expectedVersion: run.version }); }} className={buttonClass('ghost', 'h-11 px-4')}>
-              <ArrowCounterClockwise size={16} weight="bold" />Undo the last change
-            </button>
-          )}
+            onApply={() => void apply(r)} />)}
 
           {!runId && <Comparison seedId={SEEDS[day]} />}
 

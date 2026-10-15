@@ -10,7 +10,7 @@ import { festival, plural } from '@/lib/timetable';
 const panel = 'rounded-[4px] border border-chalk/12 bg-haze/80 p-5 backdrop-blur-md sm:p-6';
 const h2 = 'flex items-baseline gap-3 font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]';
 const Step = ({ n, children }: { n: number; children: React.ReactNode }) => (
-  <h2 className={h2}><span className="font-mono text-[0.75rem] font-normal text-chalk-2 tabular-nums">0{n}</span>{children}</h2>
+  <h2 className={h2}><span className="font-mono text-[0.75rem] font-normal text-chalk-2 tabular-nums"><span aria-hidden="true">0{n}/04</span><span className="sr-only">Step {n} of 4:</span></span>{children}</h2>
 );
 const body = 'text-[0.9375rem] leading-[1.6] text-chalk-2';
 const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
@@ -41,7 +41,8 @@ export function ImportPage() {
         <a href="/" className="inline-flex items-center gap-2.5 font-display text-[1rem] font-extrabold uppercase tracking-[0.06em] text-chalk">
           <ArrowLeft size={16} weight="bold" className="text-chalk-2" />Interval
         </a>
-        <a href="/sheet" className="ms-auto text-[0.875rem] text-chalk-2 underline decoration-chalk/30 underline-offset-4 hover:text-chalk">Sample festivals</a>
+        {runId && <a href="/import" className="ms-auto text-[0.875rem] text-chalk-2 underline decoration-chalk/30 underline-offset-4 hover:text-chalk">Start over</a>}
+        <a href="/sheet" className={cn(!runId && 'ms-auto', 'text-[0.875rem] text-chalk-2 underline decoration-chalk/30 underline-offset-4 hover:text-chalk')}>Sample festivals</a>
       </header>
       <main className="rise mx-auto mt-10 max-w-3xl space-y-5 px-5 pb-24" style={{ '--i': 1 } as React.CSSProperties}>
         <div>
@@ -70,6 +71,7 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
     if (f.size > 120_000) { setProblem('Choose a CSV under 120 KB. Interval takes up to 150 sets.'); return; }
     setCsv(await f.text()); setProblem(null);
   };
+  const fillSample = () => { setCsv(sampleCsv()); setTimezone('America/Chicago'); setProblem(null); };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!csv.trim()) { setProblem('Paste a CSV with a header row: day, stage, act, start, end.'); return; }
@@ -80,11 +82,18 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
   };
   return (
     <form onSubmit={submit} className={panel} noValidate>
-      <Step n={1}>Paste the draft</Step>
-      <label htmlFor="csv" className="mt-4 block text-[0.875rem] font-medium text-chalk">Running order as CSV</label>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Step n={1}>Paste the draft</Step>
+        <button type="button" onClick={fillSample} className={buttonClass('ghost', 'h-10 px-4')}>Use the ACL Friday sample</button>
+      </div>
+      <label htmlFor="csv" className="mt-5 block text-[0.875rem] font-medium text-chalk">Running order as CSV</label>
       <p id="csv-help" className="mt-1 max-w-[68ch] text-pretty text-[0.8125rem] leading-[1.6] text-chalk-2">
-        Columns: day, stage, act, start and end. Optional: hold (day, stage, start or exact), band (opener, middle, sub-headline or headline) and tier (1–100). Use 24-hour local times such as 19:30, and a dated end such as 2026-10-03T01:00 for sets that finish after midnight. Up to 150 sets and 60 acts.
+        Columns: day, stage, act, start, end, with 24-hour local times such as 19:30. Up to 150 sets and 60 acts.
       </p>
+      <details className="mt-1 text-[0.8125rem] leading-[1.6] text-chalk-2">
+        <summary className="cursor-pointer text-chalk underline decoration-chalk/35 underline-offset-4">Optional columns</summary>
+        <p className="mt-1 max-w-[68ch] text-pretty">hold (day, stage, start or exact), band (opener, middle, sub-headline or headline) and tier (1–100). For a set that ends after midnight, give a dated end such as 2026-10-03T01:00.</p>
+      </details>
       <textarea id="csv" value={csv} onChange={e => setCsv(e.target.value)} rows={10} spellCheck={false}
         aria-describedby={problem ? 'csv-help csv-problem' : 'csv-help'} aria-invalid={problem ? true : undefined}
         placeholder={'day,stage,act,start,end,hold\n2026-10-02,Main,Headliner,20:00,21:30,exact'}
@@ -102,9 +111,6 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
           <FileArrowUp size={16} weight="bold" />Choose a CSV file
           <input type="file" accept=".csv,text/csv" className="sr-only" onChange={e => void file(e.target.files?.[0])} />
         </label>
-        <button type="button" onClick={() => { setCsv(sampleCsv()); setTimezone('America/Chicago'); setProblem(null); }} className={buttonClass('link', 'h-11')}>
-          Use the ACL Friday sample
-        </button>
       </div>
       <button type="submit" disabled={sending} className={buttonClass('primary', 'mt-6 h-12 px-5')}>
         {sending ? 'Checking…' : 'Check the timetable'}<ArrowRight size={16} weight="bold" className={arrowClass} />
@@ -229,7 +235,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
     <section className={panel}>
       <Step n={3}>Confirm the matches</Step>
       <p className={cn(body, 'mt-2')}>
-        {pending.length ? `Pick the Qloo artist for each act, or None of these. Check the description: different artists often share a name. Acts you skip stay unknown.${reviewed ? ` Matches a person confirmed for ${reviewed} are preselected; check them before saving.` : ''}`
+        {pending.length ? `Pick the Qloo artist for each act. Names repeat, so check the description. Acts you skip stay unknown.${reviewed ? ` Matches a person already confirmed for ${reviewed} are preselected.` : ''}`
           : 'Every act is settled. Acts without a match stay unknown: Interval never moves them and never treats their pairs as zero.'}
       </p>
       {pending.length > 0 && (
@@ -255,9 +261,12 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
         </ul>
       )}
       {pending.length > 0 && (
-        <button type="button" disabled={!chosen.length || saving} onClick={confirm} className={buttonClass('primary', 'mt-6 h-12 px-5')}>
-          <Check size={16} weight="bold" />{saving ? 'Saving…' : `Save ${plural(chosen.length, 'choice', 'choices')}`}
-        </button>
+        <div className="sticky bottom-[4.25rem] z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[4px] xl:bottom-4 border border-chalk/15 bg-stage/95 px-4 py-3 shadow-[0_18px_40px_-20px_oklch(0.122_0.009_268.083_/_0.95)] backdrop-blur-md">
+          <p className="text-[0.875rem] text-chalk-2 tnum">{chosen.length} of {plural(pending.length, 'act', 'acts')} chosen{chosen.length < pending.length ? '. The rest stay unknown.' : ''}</p>
+          <button type="button" disabled={!chosen.length || saving} onClick={confirm} className={buttonClass('primary', 'h-12 px-5')}>
+            <Check size={16} weight="bold" />{saving ? 'Saving…' : `Save ${plural(chosen.length, 'choice', 'choices')}`}
+          </button>
+        </div>
       )}
       {done.length > 0 && (
         <ul className="mt-6 divide-y divide-chalk/10 border-t border-chalk/10">
