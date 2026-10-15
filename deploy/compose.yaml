@@ -23,6 +23,11 @@ services:
       - ${INTERVAL_CACHE_DIR:?set INTERVAL_CACHE_DIR to the private cache directory}:/app/cache
     networks:
       - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4191/api/health"]
       interval: 30s
@@ -40,6 +45,11 @@ services:
     networks:
       - internal
       - public_proxy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   internal: {}
