@@ -98,11 +98,11 @@ function Warnings({ run, strong, onOpen, onRule, busy }: { run: Run; strong: Cla
           </ul>
         ) : <p className="mt-3 text-[0.9375rem] text-chalk-2">No strong clash among the acts Qloo identifies.</p>}
         <p className="mt-2 text-[0.8125rem] leading-[1.6] text-chalk-2">
-          {plural(unknown, 'overlapping pair includes', 'overlapping pairs include')} an act Qloo can’t identify. They stay unknown, never zero.{' '}
-          {net ? 'Looser rule: a tested change can’t add to their total overlap, though single pairs can shift.' : 'Strict rule: a tested change can’t add overlap to any of them.'}{' '}
+          {plural(unknown, 'overlapping pair includes', 'overlapping pairs include')} an act Qloo can’t identify. Interval counts them as unknown, never as safe.{' '}
+          {net ? 'Looser rule in use: a tested change can’t grow their total overlap, though one pair can shift.' : 'Strict rule in use: a tested change can’t add overlap to any one of them.'}{' '}
           <button type="button" disabled={busy} onClick={() => onRule(net ? 'pair' : 'net')}
             className="font-medium text-chalk underline decoration-chalk/35 underline-offset-4 hover:decoration-chalk disabled:cursor-not-allowed disabled:opacity-45">
-            {net ? 'Use the strict rule' : 'Use the looser rule'}
+            {net ? 'Switch to the strict rule' : 'Switch to the looser rule'}
           </button>
         </p>
       </>}

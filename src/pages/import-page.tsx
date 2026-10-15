@@ -189,6 +189,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
   const [choice, setChoice] = useState<Record<string, string>>(() => Object.fromEntries(acts.filter(i => i.status === 'ambiguous' && i.suggestedRef).map(i => [i.act, i.suggestedRef!])));
   const reviewed = acts.find(i => i.status === 'ambiguous' && i.suggestedFrom)?.suggestedFrom;
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const pending = acts.filter(i => i.status === 'ambiguous');
   const chosen = pending.filter(i => choice[i.act]);
   const confirm = async () => {
@@ -245,7 +246,8 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
               <fieldset>
                 <legend className="font-narrow text-[1.25rem] font-semibold uppercase leading-tight text-chalk">{i.act}</legend>
                 <div className="mt-2 grid gap-2">
-                  {[...i.candidates.map(c => ({ ref: c.ref, title: c.name, tag: c.ref === i.suggestedRef ? 'Reviewed match' : c.name.toLowerCase() === i.act.toLowerCase() ? 'Same name' : null, detail: [c.genres.slice(0, 3).join(', '), c.description].filter(Boolean).join(' · ') })), { ref: 'none', title: 'None of these', tag: null, detail: 'The act stays unknown.' }].map(o => (
+                  {[...i.candidates.map(c => ({ ref: c.ref, title: c.name, tag: c.ref === i.suggestedRef ? 'Reviewed match' : c.name.toLowerCase() === i.act.toLowerCase() ? 'Same name' : null, detail: [c.genres.slice(0, 3).join(', '), c.description].filter(Boolean).join(' · ') })), { ref: 'none', title: 'None of these', tag: null, detail: 'The act stays unknown.' }]
+                    .filter((o, k) => expanded[i.act] || k < 2 || o.ref === 'none' || o.ref === choice[i.act]).map(o => (
                     <label key={o.ref} className={cn('flex cursor-pointer items-start gap-3 rounded-[3px] border px-3 py-2.5 transition-colors duration-150', choice[i.act] === o.ref ? 'border-chalk/60 bg-chalk/[0.07]' : 'border-chalk/12 hover:border-chalk/35')}>
                       <input type="radio" name={`match-${i.act}`} value={o.ref} checked={choice[i.act] === o.ref} onChange={() => setChoice(m => ({ ...m, [i.act]: o.ref }))} className="mt-1 size-4 shrink-0 accent-[var(--color-chalk)]" />
                       <span className="min-w-0">
@@ -254,6 +256,12 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
                       </span>
                     </label>
                   ))}
+                  {!expanded[i.act] && i.candidates.length > 2 + (i.candidates.slice(2).some(c => c.ref === choice[i.act]) ? 1 : 0) && (
+                    <button type="button" onClick={() => setExpanded(m => ({ ...m, [i.act]: true }))}
+                      className="justify-self-start py-1 text-[0.8125rem] text-chalk underline decoration-chalk/35 underline-offset-4 hover:decoration-chalk">
+                      Show {plural(i.candidates.length - 2 - (i.candidates.slice(2).some(c => c.ref === choice[i.act]) ? 1 : 0), 'more match', 'more matches')}
+                    </button>
+                  )}
                 </div>
               </fieldset>
             </li>
