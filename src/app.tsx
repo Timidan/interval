@@ -27,5 +27,6 @@ class PageError extends Component<{ children: ReactNode }, { failed: boolean }> 
 
 export function App() {
   const path = window.location.pathname;
+  document.title = path.startsWith('/sheet') ? 'Running order · Interval' : path.startsWith('/import') ? 'Import a draft · Interval' : 'Interval · Fix the clashes in a festival running order';
   return <StageProvider><PageError>{path.startsWith('/sheet') ? <SheetPage /> : path.startsWith('/import') ? <ImportPage /> : <Landing />}</PageError></StageProvider>;
 }
