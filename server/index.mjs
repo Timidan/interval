@@ -296,6 +296,8 @@ const server = createServer(async (req, res) => {
   }
 });
 server.requestTimeout = 35000;
+// Outlive the proxy's 2-minute upstream keep-alive, so the proxy closes idle connections first instead of reusing one Node is closing.
+server.keepAliveTimeout = 125000; server.headersTimeout = 126000;
 const port = Number(process.env.PORT || 4191);
 const host = process.env.HOST || '127.0.0.1';
 server.listen(port, host, () => console.log(`Interval API: http://${host}:${port}`));
