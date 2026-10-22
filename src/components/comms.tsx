@@ -19,7 +19,7 @@ const TOOLS: Record<string, string> = {
 const task = (s: AgentStep): AITask => ({
   id: s.id,
   label: s.kind === 'model' ? 'Plan the next step' : TOOLS[s.name ?? ''] ?? (s.name ?? 'Tool').replace(/_/g, ' '),
-  note: s.kind === 'model' ? s.model : s.reason,
+  note: s.status === 'rejected' ? 'Refused by Interval’s checks; nothing changed' : s.status === 'invalid' ? 'Reply failed the format check; not used' : s.kind === 'model' ? s.model : s.reason,
   status: s.status === 'running' ? 'running' : s.status === 'complete' ? 'done' : 'failed',
 });
 // A time on another day names the day, so "until 1:00" can't be read as later today.
