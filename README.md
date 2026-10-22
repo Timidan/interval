@@ -56,7 +56,7 @@ npm run dev:all
 
 Then open http://127.0.0.1:4190. The API needs a Qloo hackathon key in `~/.config/interval/qloo.env` (`QLOO_BASE_URL=https://hackathon.api.qloo.com` and `QLOO_API_KEY=…`). Qloo responses are cached in `cache/`, which is never committed; set `QLOO_OFFLINE=1` to serve only cached evidence. The agent needs `HERMES_URL`; without it, the panel says live answers are unavailable. `server/README.md` documents the API, budgets and guard rules, and `deploy/` holds the container setup for the hosted demo.
 
-CSV import columns: `day, stage, act, start, end`, with optional `hold` (day, stage, start or exact), `band` (opener, middle, sub-headline or headline) and `tier` (1–100). Up to 150 sets and 60 acts.
+CSV import columns: `day, stage, act, start, end`, with optional `hold` (day, stage, start or exact), `band` (opener, middle, sub-headline or headline) and `tier` (1–100). Up to 150 sets and 60 acts. Comma, semicolon and tab separators all work, as does Excel’s CSV UTF-8 export. Times can be `19:30`, `7:30 PM` or `19:30:00`; a set that ends after midnight takes a dated end such as `2026-10-03T01:00`.
 
 ## Data and credits
 

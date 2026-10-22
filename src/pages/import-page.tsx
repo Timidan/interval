@@ -88,7 +88,7 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
       </div>
       <label htmlFor="csv" className="mt-5 block text-[0.875rem] font-medium text-chalk">Running order as CSV</label>
       <p id="csv-help" className="mt-1 max-w-[68ch] text-pretty text-[0.8125rem] leading-[1.6] text-chalk-2">
-        Columns: day, stage, act, start, end, with 24-hour local times such as 19:30. Up to 150 sets and 60 acts.
+        Columns: day, stage, act, start, end, with local times such as 19:30 or 7:30 PM. Cells pasted from a spreadsheet work too. Up to 150 sets and 60 acts.
       </p>
       <details className="mt-1 text-[0.8125rem] leading-[1.6] text-chalk-2">
         <summary className="cursor-pointer text-chalk underline decoration-chalk/35 underline-offset-4">Optional columns</summary>

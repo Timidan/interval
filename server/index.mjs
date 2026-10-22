@@ -49,26 +49,38 @@ function reserve(run, ip, maximum, requested, scoring) {
     };
   } catch (error) { db.exec('ROLLBACK'); throw error; }
 }
-const maxSearches = Number(process.env.MAX_SEARCHES || 3);
-if (!Number.isInteger(maxSearches) || maxSearches < 1) throw new Error('MAX_SEARCHES must be a positive integer');
-let activeSearches = 0;
+const maxSearches = Number(process.env.MAX_SEARCHES || 3), maxQueued = Number(process.env.MAX_QUEUED_SEARCHES || 20);
+if (![maxSearches, maxQueued].every(n => Number.isInteger(n) && n >= 1)) throw new Error('MAX_SEARCHES and MAX_QUEUED_SEARCHES must be positive integers');
+let activeSearches = 0; const queued = [];
 function checkSearchCapacity() {
-  if (activeSearches >= maxSearches) throw fail(409, 'Interval is busy with other searches. Try again in a minute.');
+  if (activeSearches >= maxSearches && queued.length >= maxQueued) throw fail(503, 'Interval is busy with other searches. Nothing changed; try again in a minute.');
 }
-function searchWorker(run, weights, options = {}) {
+// A finished search hands its slot straight to the oldest waiting one.
+const releaseSearch = () => { const next = queued.shift(); if (next) next(); else activeSearches--; };
+function searchSlot() {
   checkSearchCapacity();
-  activeSearches++;
+  if (activeSearches < maxSearches) { activeSearches++; return Promise.resolve(); }
+  return new Promise((resolve, reject) => {
+    const start = () => { clearTimeout(timer); resolve(); };
+    const timer = setTimeout(() => { queued.splice(queued.indexOf(start), 1); reject(fail(503, 'Interval stayed busy with other searches, so this search didn’t start.')); }, 45000);
+    queued.push(start);
+  });
+}
+async function searchWorker(run, weights, options = {}) {
+  await searchSlot();
   return new Promise((resolve, reject) => {
     let worker;
     try { worker = new Worker(new URL('./worker.mjs', import.meta.url), { workerData: { schedule: run.schedule, weights, options: { startSlots: run.current, ...options } } }); }
-    catch (error) { activeSearches--; reject(error); return; }
+    catch (error) { releaseSearch(); reject(error); return; }
     let received = false;
     const timer = setTimeout(() => { void worker.terminate(); reject(fail(504, 'Repair search timed out. No completed repair was returned.')); }, 30000);
     worker.once('message', result => { received = true; clearTimeout(timer); resolve(result); });
     worker.once('error', () => { clearTimeout(timer); reject(fail(500, 'Repair search could not finish')); });
-    worker.once('exit', code => { activeSearches--; clearTimeout(timer); if (code !== 0 || !received) reject(fail(500, 'Repair search could not finish')); });
+    worker.once('exit', code => { releaseSearch(); clearTimeout(timer); if (code !== 0 || !received) reject(fail(500, 'Repair search could not finish')); });
   });
 }
+// ponytail: fixed hourly window per process, reset on restart; a sliding window if hour-boundary bursts matter.
+const runsPerHour = 60; let opened = { hour: -1, ips: new Map() };
 function startJob(run, work) {
   busy.add(run.id); saveRun(run);
   Promise.resolve().then(work).catch(error => {
@@ -84,7 +96,7 @@ for (const row of db.prepare("SELECT id,data FROM runs WHERE id != '_anonymous_l
   if (['resolving', 'scoring', 'searching', 'thinking'].includes(run.status)) {
     const turn = run.agent?.turns.at(-1);
     if (turn?.status === 'thinking') { turn.status = 'failed'; turn.reason = 'Agent turn interrupted by server restart; review constraints before retrying'; turn.completedAt = new Date().toISOString(); for (const step of turn.steps) if (step.status === 'running') { step.status = 'failed'; step.completedAt = turn.completedAt; } }
-    run.status = 'failed'; run.reason = 'Operation interrupted by server restart; prior evidence and timetable preserved'; saveRun(run); }
+    run.status = 'failed'; run.reason = 'Interval restarted before this finished.'; saveRun(run); }
 }
 const server = createServer(async (req, res) => {
   try {
@@ -120,9 +132,18 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === 'GET' && path === '/api/seeds') return json(res, 200, seeds.map(s => ({ ...s, snapshot: snapshotSummary(loadSnapshot(s.id)) })));
     if (req.method === 'POST' && path === '/api/runs') {
+      const hour = Math.floor(Date.now() / 3600000), ip = hash(clientIp(req));
+      if (opened.hour !== hour) opened = { hour, ips: new Map() };
+      if ((opened.ips.get(ip) || 0) >= runsPerHour) {
+        const wait = 60 - new Date().getUTCMinutes();
+        throw fail(429, `This network has opened ${runsPerHour} running orders this hour. Try again in ${wait} minute${wait === 1 ? '' : 's'}; running orders you already have still work.`);
+      }
       const input = await body(req);
       if (!session) { session = randomBytes(32).toString('hex'); res.setHeader('Set-Cookie', `interval_session=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${process.env.TRUST_PROXY === '1' && req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''}`); }
-      try { return json(res, 201, view(newRun(input, hash(session)))); } catch (error) { throw fail(400, error.message); }
+      let created;
+      try { created = newRun(input, hash(session)); } catch (error) { throw fail(400, error.message); }
+      opened.ips.set(ip, (opened.ips.get(ip) || 0) + 1);
+      return json(res, 201, view(created));
     }
     const match = path.match(/^\/api\/runs\/([a-f0-9-]{36})(?:\/(identities|score|actions|messages|evidence)(?:\/(pair-[a-f0-9]{24}))?)?$/);
     if (!match || !session) throw fail(404, 'This run is unavailable.');

@@ -229,13 +229,24 @@ solution that requires multiple simultaneous relocations.
 
 ## Search capacity and run expiry
 
-`MAX_SEARCHES` (positive integer, default `3`) caps worker searches across all
-runs in this API process, including repair, genre baseline and agent searches.
-Saturated repair/baseline requests and new live agent turns return 409 with
-`Interval is busy with other searches. Try again in a minute.` before changing
-run state. Searches initiated during an already accepted agent turn also check
-the cap; a rejected tool step retains the existing proposals. Slots remain held
-until the worker exits, including after timeout termination.
+`MAX_SEARCHES` (positive integer, default `3`) caps worker searches running at
+once across all runs in this API process, including repair, genre baseline and
+agent searches. Further searches wait in a first-in, first-out queue of up to
+`MAX_QUEUED_SEARCHES` (positive integer, default `20`); the request is accepted
+(202, run status `searching`) and the search starts when a slot frees. When the
+queue is full, repair/baseline requests and new live agent turns return 503 with
+`Interval is busy with other searches. Nothing changed; try again in a minute.`
+before changing run state. A search that waits 45 s without a slot fails the run
+with a plain reason and leaves the timetable and constraints unchanged. The 30 s
+worker timeout starts when the worker starts, not while it waits. Searches
+initiated during an accepted agent turn use the same queue; a failed tool step
+retains the existing proposals. Slots remain held until the worker exits,
+including after timeout termination.
+
+`POST /api/runs` accepts at most 60 new runs per client IP per clock hour (the
+same client IP used for Qloo limits, honouring `TRUST_PROXY`). Further creations
+return 429 with the minutes left until the hour resets. The count lives in memory
+and resets when the process restarts.
 
 `RUN_TTL_DAYS` (positive number, default `7`) controls run retention by `createdAt`.
 Startup and hourly cleanup delete older runs, excluding IDs beginning with `_`

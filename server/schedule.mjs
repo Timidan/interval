@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 
 export function csv(text) {
+  text = text.replace(/^﻿/, '');
+  const head = text.split('\n', 1)[0], sep = head.includes(',') ? ',' : head.includes(';') ? ';' : head.includes('\t') ? '\t' : ',';
   const rows = []; let row = [], cell = '', quoted = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (c === '"') { if (quoted && text[i + 1] === '"') { cell += '"'; i++; } else quoted = !quoted; }
-    else if (!quoted && (c === ',' || c === '\n')) { row.push(cell.replace(/\r$/, '')); cell = ''; if (c === '\n') { rows.push(row); row = []; } }
+    else if (!quoted && (c === sep || c === '\n')) { row.push(cell.replace(/\r$/, '')); cell = ''; if (c === '\n') { rows.push(row); row = []; } }
     else cell += c;
   }
   if (quoted) throw new Error('Unclosed CSV quote');
