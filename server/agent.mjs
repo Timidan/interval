@@ -73,7 +73,7 @@ const fmt = n => Number(n.toFixed(3));
 const guardName = guard => guard === 'net' ? "the looser rule (total overlap with unknown acts doesn't grow)" : 'the strict rule (no pair with an unknown act gains overlap)';
 const constraintNames = { lock: 'Hold', availability: 'Availability', allowed_stages: 'Allowed stages', move_budget: 'Move limit', walking_buffer: 'Walking buffer', unknown_guard: 'Unknown-act rule', objective: 'Objective' };
 const constraintText = (kind, acts) => `${constraintNames[kind]} updated${acts.length ? ` for ${acts.join(', ')}` : ''}. The working placements are unchanged.`;
-const repairText = (r, acts, guard) => `A proposal moves ${acts.length} ${acts.length === 1 ? 'set' : 'sets'}: ${acts.join(', ')}. Qloo-weighted clash minutes change from ${fmt(r.before.cost)} to ${fmt(r.after.cost)}${r.before.majorDrawMinutes === 0 && r.after.majorDrawMinutes === 0 ? '' : `; major-draw minutes without an alternative change from ${r.before.majorDrawMinutes} to ${r.after.majorDrawMinutes}`}. Unknown overlap ${r.before.unknownMinutes === r.after.unknownMinutes ? `stays at ${r.before.unknownMinutes}` : `changes from ${r.before.unknownMinutes} to ${r.after.unknownMinutes}`} minutes under ${guardName(guard)}. This proposal passed validation and has not been applied.`;
+const repairText = (r, acts, guard) => `A proposal moves ${acts.length} ${acts.length === 1 ? 'set' : 'sets'}: ${acts.join(', ')}. Qloo-weighted clash minutes change from ${fmt(r.before.cost)} to ${fmt(r.after.cost)}${r.before.majorDrawMinutes === 0 && r.after.majorDrawMinutes === 0 ? '' : `; major-draw minutes without an alternative change from ${r.before.majorDrawMinutes} to ${r.after.majorDrawMinutes}`}. Overlap with unknown acts ${r.before.unknownMinutes === r.after.unknownMinutes ? `stays at ${r.before.unknownMinutes.toLocaleString('en-US')}` : `changes from ${r.before.unknownMinutes.toLocaleString('en-US')} to ${r.after.unknownMinutes.toLocaleString('en-US')}`} minutes under ${guardName(guard)}. This proposal passed validation and has not been applied.`;
 const time = s => `${new Date(s.start * 60000).toLocaleString('en-US', { timeZone: 'UTC', weekday: 'short', hour: 'numeric', minute: '2-digit' })} on ${s.stage}`;
 const system = `You are Interval's festival programming agent. Return ONLY a strict JSON object, no markdown.
 Each step is {"type":"tools","calls":[{"name":TOOL,"args":OBJECT}]} (1-4 calls) OR {"type":"final","segments":[{"templateId":TEMPLATE,"factRefs":[FACT_ID]}]}.
@@ -121,7 +121,7 @@ function fact(turn, templateId, text, data, kind) {
 function summary(run, turn) {
   if (!run.snapshot || !coverage(run).usablePairs) return fact(turn, 'unavailable_evidence', 'Clash measures are unavailable. Saved usable affinities are required before a repair can be compared.', {});
   const m = metrics(run.current, run.snapshot.weights, run.schedule.buffer);
-  return fact(turn, 'schedule_metrics', `The current running order has ${m.strongClashes} strong affinity clashes, ${fmt(m.cost)} Qloo-weighted clash minutes and ${m.unknownMinutes} minutes across unknown pairs.`, m);
+  return fact(turn, 'schedule_metrics', `The current running order has ${m.strongClashes} strong ${m.strongClashes === 1 ? 'clash' : 'clashes'}, ${fmt(m.cost)} Qloo-weighted clash minutes and ${m.unknownMinutes.toLocaleString('en-US')} overlap minutes with unknown acts.`, m);
 }
 async function tool(run, turn, name, args, search) {
   if (args.runId !== 'r1') throw new Error('Run reference does not belong to this turn');
