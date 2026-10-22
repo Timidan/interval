@@ -38,7 +38,7 @@ export function EvidenceDrawer({ runId, clash, onClose }: { runId: string; clash
         className={cn('paper flex h-full w-full max-w-[34rem] flex-col gap-6 overflow-y-auto overscroll-contain bg-paper p-6 text-ink shadow-[0_0_80px_oklch(0.122_0.009_268.083_/_0.6)] sm:p-8', leaving ? 'drawer-out' : 'drawer-in')}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-ink-2"><Graph size={14} weight="bold" />Qloo evidence</p>
+            <p className="flex items-center gap-2 font-mono text-[0.75rem] uppercase tracking-[0.12em] text-ink-2"><Graph size={14} weight="bold" />Qloo evidence</p>
             <h2 className="mt-2 font-narrow text-[1.75rem] font-semibold uppercase leading-[1.05]">{clash.acts[0]} × {clash.acts[1]}</h2>
             <p className="mt-2 text-[0.9375rem] leading-6 text-ink-2">
               They overlap for {clash.overlapMinutes} minutes. Pair weight {clash.weight == null ? 'unknown' : clash.weight.toFixed(2)}: the mean of both directions below, where 0.90 or more is a strong link.
@@ -75,11 +75,11 @@ export function EvidenceDrawer({ runId, clash, onClose }: { runId: string; clash
               ))}
             </ol>
             {d.request && (
-              <pre className="mt-3 overflow-x-auto rounded-[3px] bg-paper-2 p-3 font-mono text-[0.6875rem] leading-5 text-ink-2">
+              <pre className="mt-3 overflow-x-auto rounded-[3px] bg-paper-2 p-3 font-mono text-[0.75rem] leading-5 text-ink-2">
                 {`${d.request.method} ${d.request.path}\n${Object.entries(d.request.params).map(([k, v]) => `  ${k}=${param(v)}`).join('\n')}`}
               </pre>
             )}
-            <p className="mt-2 font-mono text-[0.6875rem] text-ink-2">Saved Qloo snapshot, fetched {date(d.fetched)}</p>
+            <p className="mt-2 font-mono text-[0.75rem] text-ink-2">Saved Qloo snapshot, fetched {date(d.fetched)}</p>
           </section>
         ))}
         <p className="mt-auto text-[0.8125rem] leading-5 text-ink-2">Affinity is Qloo’s taste-graph signal, ranked within each act’s row. It is not a count of shared ticket holders.</p>

@@ -61,7 +61,7 @@ function Turn({ turn }: { turn: AgentTurn }) {
   return (
     <li className="rise space-y-3">
       <p className="ms-auto w-fit max-w-[90%] rounded-[3px] bg-chalk/10 px-3 py-2 text-[0.875rem] leading-[1.6] text-chalk">{turn.message}</p>
-      {turn.mode === 'recorded' && <p className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-gel">Recorded answer · {recorded(turn.recordedAt)}</p>}
+      {turn.mode === 'recorded' && <p className="font-mono text-[0.75rem] uppercase tracking-[0.12em] text-gel">Recorded answer · {recorded(turn.recordedAt)}</p>}
       {turn.steps.length > 0 && <AITaskList label="Steps" tasks={turn.steps.map(task)} className="rounded-[3px] bg-stage/50" />}
       {turn.segments.map((s, i) => (
         <p key={i} className={cn('text-[0.9375rem] leading-6', s.kind === 'question' ? 'text-gel' : 'text-chalk/90')}>{s.text}</p>
@@ -113,7 +113,7 @@ export function Comms({ run, send, className }: { run?: Run; send: (body: Omit<M
           <Headset size={20} weight="duotone" className="text-gel" />
           <h2 className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">Comms</h2>
         </div>
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-chalk-2">{health?.model ?? 'Agent'} · {status}</span>
+        <span className="font-mono text-[0.75rem] uppercase tracking-[0.12em] text-chalk-2">{health?.model ?? 'Agent'} · {status}</span>
       </div>
 
       {turns.length === 0 && (
@@ -135,7 +135,7 @@ export function Comms({ run, send, className }: { run?: Run; send: (body: Omit<M
 
       {recordings.length > 0 && !thinking && (
         <div className="space-y-2">
-          <p className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-chalk-2">Recorded answers</p>
+          <p className="font-mono text-[0.75rem] uppercase tracking-[0.12em] text-chalk-2">Recorded answers</p>
           {recordings.map(r => (
             <button key={r.id} type="button" onClick={() => void send({ message: r.message, replayId: r.id })}
               className="group flex w-full items-start gap-2 rounded-[3px] border border-chalk/12 px-3 py-2 text-start text-[0.875rem] leading-5 text-chalk/90 transition-colors duration-200 ease-push hover:border-chalk/40">

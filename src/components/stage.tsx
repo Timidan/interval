@@ -167,7 +167,7 @@ export function StageBackground({ dim = 0.9 }: { dim?: number }) {
         type="button"
         onClick={() => setPaused(!paused)}
         aria-label={paused ? 'Play motion' : 'Pause motion'}
-        className="fixed end-3 bottom-3 z-40 inline-flex size-11 items-center justify-center gap-2 rounded-[3px] border border-chalk/20 bg-stage/70 text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-chalk-2 backdrop-blur transition-[color,border-color,scale] duration-200 ease-push hover:border-chalk/50 hover:text-chalk active:scale-[0.96] motion-reduce:hidden sm:end-4 sm:bottom-4 sm:w-auto sm:px-4"
+        className="fixed end-3 bottom-3 z-40 inline-flex size-11 items-center justify-center gap-2 rounded-[3px] border border-chalk/20 bg-stage/70 text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-chalk-2 backdrop-blur transition-[color,border-color,scale] duration-200 ease-push hover:border-chalk/50 hover:text-chalk active:scale-[0.96] motion-reduce:hidden sm:end-4 sm:bottom-4 sm:w-auto sm:px-4"
       >
         <span className="relative grid size-4 place-items-center">
           <AnimatePresence initial={false} mode="popLayout">

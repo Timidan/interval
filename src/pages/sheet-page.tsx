@@ -123,7 +123,7 @@ function Proposal({ repair, n, total, shown, onShow, onApply }: { repair: Repair
     <section aria-label={`Tested change ${n} of ${total}`} className={cn(panel, 'rise')} style={{ '--i': n - 1 } as React.CSSProperties}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">Tested change {n} of {total}</h2>
-        {repair.validity.passed && <span className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.1em] text-cue-dark"><Check size={14} weight="bold" />Keeps every hold</span>}
+        {repair.validity.passed && <span className="inline-flex items-center gap-1.5 font-mono text-[0.75rem] uppercase tracking-[0.1em] text-cue-dark"><Check size={14} weight="bold" />Keeps every hold</span>}
       </div>
       <ul className="mt-4 space-y-2">
         {repair.changes.map(c => (
@@ -138,7 +138,7 @@ function Proposal({ repair, n, total, shown, onShow, onApply }: { repair: Repair
       <dl className="mt-4 grid grid-cols-1 gap-3 border-t border-chalk/10 pt-4 min-[26rem]:grid-cols-3 min-[26rem]:gap-4">
         {rows.map(([label, before, after]) => (
           <div key={label}>
-            <dt className="font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.12em] text-chalk-2">{label}</dt>
+            <dt className="font-mono text-[0.75rem] uppercase leading-4 tracking-[0.12em] text-chalk-2">{label}</dt>
             <dd className="mt-1 font-display text-[1.25rem] font-bold tnum">{before} <span className="text-chalk-2">to</span> {after}</dd>
           </div>
         ))}
@@ -259,7 +259,7 @@ export function SheetPage() {
               className={buttonClass('primary', 'h-12 whitespace-nowrap px-5')}>
               <Intersect size={16} weight="bold" />{run?.status === 'searching' ? 'Searching…' : 'Repair running order'}
             </button>
-            <span id="repair-why" className="mt-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.1em] text-chalk-2">
+            <span id="repair-why" className="mt-1.5 font-mono text-[0.75rem] uppercase tracking-[0.1em] text-chalk-2">
               {run ? `Moves up to ${plural(run.schedule.k, 'set', 'sets')} · keeps every hold` : error ? 'Qloo evidence unavailable' : 'Loading Qloo evidence'}
             </span>
           </div>
@@ -355,7 +355,13 @@ export function SheetPage() {
                 {[0, 1, 2, 3].map(i => <div key={i} className="shimmer h-12 rounded-[7px]" />)}
               </div>
             ) : view === 'sheet'
-              ? <Sheet key={`${fid}-${day}`} sets={sets} stages={stages} clashIds={clashIds} ghosts={sheetGhosts} variant="full" pinned={pinned} onPin={setPinned} />
+              ? (
+                <>
+                  <a href="#after-sheet" className="sr-only focus:not-sr-only focus:mb-3 focus:inline-block focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-[0.8125rem] focus:font-semibold focus:text-paper">Skip past the timetable</a>
+                  <Sheet key={`${fid}-${day}`} sets={sets} stages={stages} clashIds={clashIds} ghosts={sheetGhosts} variant="full" pinned={pinned} onPin={setPinned} />
+                  <span id="after-sheet" tabIndex={-1} />
+                </>
+              )
               : <ListView sets={sets} stages={stages} clashIds={clashIds} movedIds={new Set(sheetGhosts?.map(g => g.id))} />}
             {selected && run && (
               <div className="mt-1 flex flex-wrap items-center gap-3">

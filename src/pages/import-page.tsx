@@ -94,7 +94,7 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
         <summary className="cursor-pointer text-chalk underline decoration-chalk/35 underline-offset-4">Optional columns</summary>
         <p className="mt-1 max-w-[68ch] text-pretty">hold (day, stage, start or exact), band (opener, middle, sub-headline or headline) and tier (1–100). For a set that ends after midnight, give a dated end such as 2026-10-03T01:00.</p>
       </details>
-      <textarea id="csv" value={csv} onChange={e => setCsv(e.target.value)} rows={10} spellCheck={false}
+      <textarea id="csv" value={csv} onChange={e => setCsv(e.target.value)} rows={10} spellCheck={false} wrap="off"
         aria-describedby={problem ? 'csv-help csv-problem' : 'csv-help'} aria-invalid={problem ? true : undefined}
         placeholder={'day,stage,act,start,end,hold\n2026-10-02,Main,Headliner,20:00,21:30,exact'}
         className="mt-3 w-full resize-y rounded-[3px] border border-chalk/15 bg-stage/60 p-3 font-mono text-base leading-6 text-chalk placeholder:text-chalk-2/70 focus-visible:border-chalk/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gel sm:text-[0.8125rem]" />
@@ -251,7 +251,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
                     <label key={o.ref} className={cn('flex cursor-pointer items-start gap-3 rounded-[3px] border px-3 py-2.5 transition-colors duration-150', choice[i.act] === o.ref ? 'border-chalk/60 bg-chalk/[0.07]' : 'border-chalk/12 hover:border-chalk/35')}>
                       <input type="radio" name={`match-${i.act}`} value={o.ref} checked={choice[i.act] === o.ref} onChange={() => setChoice(m => ({ ...m, [i.act]: o.ref }))} className="mt-1 size-4 shrink-0 accent-[var(--color-chalk)]" />
                       <span className="min-w-0">
-                        <span className="flex flex-wrap items-baseline gap-x-2 text-[0.9375rem] font-semibold text-chalk">{o.title}{o.tag && <span className="font-mono text-[0.6875rem] font-normal uppercase tracking-[0.1em] text-chalk-2">{o.tag}</span>}</span>
+                        <span className="flex flex-wrap items-baseline gap-x-2 text-[0.9375rem] font-semibold text-chalk">{o.title}{o.tag && <span className="font-mono text-[0.75rem] font-normal uppercase tracking-[0.1em] text-chalk-2">{o.tag}</span>}</span>
                         {o.detail && <span className="mt-0.5 block text-[0.8125rem] leading-[1.5] text-chalk-2 [overflow-wrap:anywhere]">{o.detail}</span>}
                       </span>
                     </label>

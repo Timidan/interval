@@ -126,7 +126,7 @@ function LineupMarquee({ sets, clashIds }: { sets: Slot[]; clashIds: Set<string>
           ))}
         </div>
       </motion.div>
-      <p className="mx-auto mt-7 flex max-w-[92rem] flex-wrap gap-x-6 gap-y-1 px-5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-chalk-2 sm:px-8">
+      <p className="mx-auto mt-7 flex max-w-[92rem] flex-wrap gap-x-6 gap-y-1 px-5 font-mono text-[0.75rem] uppercase tracking-[0.12em] text-chalk-2 sm:px-8">
         <span>Solid: Qloo identifies the act</span><span>Outline: it can’t</span><span className="text-marker-dark">Red: the strongest clash</span>
       </p>
     </section>
@@ -357,7 +357,7 @@ export function Landing() {
           </div>
           {clash && (
             <aside aria-label="Clash warning" className="rise relative z-10 -mt-4 ms-auto me-4 block max-w-[26rem] rounded-[18px] border border-marker-dark/45 bg-stage/90 p-5 shadow-[0_24px_60px_-20px_oklch(0.122_0.009_268.083_/_0.95),inset_0_1px_0_oklch(0.955_0.016_79.351_/_0.06)] backdrop-blur-md sm:me-8" style={order(4)}>
-              <p className="flex items-center gap-2 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-marker-dark"><Intersect size={14} weight="bold" />Clash warning</p>
+              <p className="flex items-center gap-2 font-mono text-[0.75rem] font-medium uppercase tracking-[0.14em] text-marker-dark"><Intersect size={14} weight="bold" />Clash warning</p>
               <p className="mt-2 font-narrow text-[1.5rem] font-semibold uppercase leading-tight text-chalk">{clash.acts[0]} × {clash.acts[1]}</p>
               <p className="mt-1.5 text-[0.9375rem] leading-6 text-chalk/80">{clash.overlapMinutes} minutes at the same time. {reading ?? 'Qloo links them strongly.'}</p>
             </aside>

@@ -40,7 +40,7 @@ export function Comparison({ seedId }: { seedId: SeedId }) {
   if (failed) return null;
 
   const rows = data ? [...data.rows].sort((a, b) => rank(a) - rank(b)) : [];
-  const head = 'px-3 pb-2 text-start font-mono text-[0.6875rem] font-normal uppercase leading-4 tracking-[0.12em] text-chalk-2';
+  const head = 'px-3 pb-2 text-start font-mono text-[0.75rem] font-normal uppercase leading-4 tracking-[0.12em] text-chalk-2';
   return (
     <section aria-labelledby="comparison-title" className="rounded-[4px] border border-chalk/12 bg-haze/80 p-5 backdrop-blur-md">
       <h2 id="comparison-title" className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">Compared with other approaches</h2>
@@ -48,7 +48,7 @@ export function Comparison({ seedId }: { seedId: SeedId }) {
         Every row is measured the same way, on the published timetable. The LLM-only trials saw the act names, set times and the same rules, but no Qloo scores. The genre rows use genre labels gathered before any Qloo data.
       </p>
       {data ? (
-        <div className="relative -mx-5 mt-4 overflow-x-auto overscroll-x-contain px-2">
+        <div tabIndex={0} role="region" aria-label="Comparison table" className="relative -mx-5 mt-4 overflow-x-auto overscroll-x-contain px-2">
           <table className="w-full min-w-[40rem] border-collapse text-[0.875rem]">
             <thead>
               <tr>

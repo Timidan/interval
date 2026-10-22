@@ -7,7 +7,7 @@ export function Stat({ label, value, after, note, className }: { label: string; 
   const changes = value !== null && after !== undefined && after !== value;
   return (
     <div className={cn('min-w-0', className)}>
-      <p className="font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.14em] text-chalk-2">{label}</p>
+      <p className="min-h-8 font-mono text-[0.75rem] uppercase leading-4 tracking-[0.14em] text-chalk-2">{label}</p>
       {value === null
         ? <p className="mt-2 text-[1.125rem] font-medium leading-[1.2] text-chalk-2">Unavailable</p>
         : (
