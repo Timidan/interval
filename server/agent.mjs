@@ -69,12 +69,14 @@ export function renderSegments(segments, facts) {
     return fact ? [{ ...segment, text: fact.text, kind: fact.kind || 'fact' }] : [];
   });
 }
-const fmt = n => Number(n.toFixed(3));
+const fmt = n => Math.round(n);
 const guardName = guard => guard === 'net' ? "the looser rule (total overlap with unknown acts doesn't grow)" : 'the strict rule (no pair with an unknown act gains overlap)';
 const constraintNames = { lock: 'Hold', availability: 'Availability', allowed_stages: 'Allowed stages', move_budget: 'Move limit', walking_buffer: 'Walking buffer', unknown_guard: 'Unknown-act rule', objective: 'Objective' };
 const constraintText = (kind, acts) => `${constraintNames[kind]} updated${acts.length ? ` for ${acts.join(', ')}` : ''}. The working placements are unchanged.`;
-const repairText = (r, acts, guard) => `A proposal moves ${acts.length} ${acts.length === 1 ? 'set' : 'sets'}: ${acts.join(', ')}. Qloo-weighted clash minutes change from ${fmt(r.before.cost)} to ${fmt(r.after.cost)}${r.before.majorDrawMinutes === 0 && r.after.majorDrawMinutes === 0 ? '' : `; major-draw minutes without an alternative change from ${r.before.majorDrawMinutes} to ${r.after.majorDrawMinutes}`}. Overlap with unknown acts ${r.before.unknownMinutes === r.after.unknownMinutes ? `stays at ${r.before.unknownMinutes.toLocaleString('en-US')}` : `changes from ${r.before.unknownMinutes.toLocaleString('en-US')} to ${r.after.unknownMinutes.toLocaleString('en-US')}`} minutes under ${guardName(guard)}. This proposal passed validation and has not been applied.`;
+const repairText = (r, acts, guard, n = 1, total = 1) => `${total > 1 ? `Tested change ${n} of ${total}` : 'A tested change'} moves ${acts.length} ${acts.length === 1 ? 'set' : 'sets'}: ${acts.join(', ')}. Qloo-weighted clash minutes change from ${fmt(r.before.cost)} to ${fmt(r.after.cost)}${r.before.majorDrawMinutes === 0 && r.after.majorDrawMinutes === 0 ? '' : `; major-draw minutes without an alternative change from ${r.before.majorDrawMinutes} to ${r.after.majorDrawMinutes}`}. Overlap with unknown acts ${r.before.unknownMinutes === r.after.unknownMinutes ? `stays at ${r.before.unknownMinutes.toLocaleString('en-US')}` : `changes from ${r.before.unknownMinutes.toLocaleString('en-US')} to ${r.after.unknownMinutes.toLocaleString('en-US')}`} minutes under ${guardName(guard)}. It passed validation and has not been applied.`;
 const time = s => `${new Date(s.start * 60000).toLocaleString('en-US', { timeZone: 'UTC', weekday: 'short', hour: 'numeric', minute: '2-digit' })} on ${s.stage}`;
+const metricsText = m => `The current running order has ${m.strongClashes} strong ${m.strongClashes === 1 ? 'clash' : 'clashes'}, ${fmt(m.cost)} Qloo-weighted clash minutes and ${m.unknownMinutes.toLocaleString('en-US')} overlap minutes with unknown acts.`;
+const changeText = (c, whole) => `${c.act} would move from ${time(c.before)} to ${time(c.after)}. Its attributed change is ${fmt(c.attributedDelta)} Qloo-weighted clash minutes; the whole proposal changes that measure by ${fmt(whole)}.`;
 const system = `You are Interval's festival programming agent. Return ONLY a strict JSON object, no markdown.
 Each step is {"type":"tools","calls":[{"name":TOOL,"args":OBJECT}]} (1-4 calls) OR {"type":"final","segments":[{"templateId":TEMPLATE,"factRefs":[FACT_ID]}]}.
 You decide workflow; deterministic tools decide facts and schedules. Every final claim must select a supplied fact with its exact templateId and one factRef. Unsupported claims are dropped. Do not write text yourself. You may ask a question using a question template and empty factRefs. No other fields.
@@ -121,7 +123,7 @@ function fact(turn, templateId, text, data, kind) {
 function summary(run, turn) {
   if (!run.snapshot || !coverage(run).usablePairs) return fact(turn, 'unavailable_evidence', 'Clash measures are unavailable. Saved usable affinities are required before a repair can be compared.', {});
   const m = metrics(run.current, run.snapshot.weights, run.schedule.buffer);
-  return fact(turn, 'schedule_metrics', `The current running order has ${m.strongClashes} strong ${m.strongClashes === 1 ? 'clash' : 'clashes'}, ${fmt(m.cost)} Qloo-weighted clash minutes and ${m.unknownMinutes.toLocaleString('en-US')} overlap minutes with unknown acts.`, m);
+  return fact(turn, 'schedule_metrics', metricsText(m), m);
 }
 async function tool(run, turn, name, args, search) {
   if (args.runId !== 'r1') throw new Error('Run reference does not belong to this turn');
@@ -174,13 +176,13 @@ async function tool(run, turn, name, args, search) {
       run.repairs = found.repairs.map(r => proposal(run, r, { seed: found.seed, evaluated: found.evaluated })).filter(r => r.validity.passed);
       result.status = run.repairs.length ? 'found' : 'none_found';
       result.repairs = run.repairs.map((r, index) => ({ repairId: `p${index + 1}`, changes: r.changes.map(c => ({ changeId: c.id, act: c.act })), validityReport: r.validity,
-        factRef: add('repair_summary', repairText(r, r.changes.map(c => c.act), r.unknownGuard), { repairId: r.id, before: r.before, after: r.after, unknownChanges: r.unknownChanges, acts: r.changes.map(c => c.act), unknownGuard: r.unknownGuard }) }));
+        factRef: add('repair_summary', repairText(r, r.changes.map(c => c.act), r.unknownGuard, index + 1, run.repairs.length), { repairId: r.id, before: r.before, after: r.after, unknownChanges: r.unknownChanges, acts: r.changes.map(c => c.act), unknownGuard: r.unknownGuard }) }));
       if (!run.repairs.length) add('no_repair', 'No improving feasible proposal was found within these holds and bounded search. Which hold, availability or move limit would you like to revise?', { evaluated: found.evaluated, validity: validate(run.schedule, run.current, run.snapshot.weights) }, 'question');
     }
   } else if (name === 'explain_change') {
     const r = /^p[12]$/.test(args.repairId) ? run.repairs[Number(args.repairId.slice(1)) - 1] : null, c = r?.changes.find(c => c.id === args.changeId);
     if (!c) throw new Error('Unknown repair or change reference');
-    add('change', `${c.act} would move from ${time(c.before)} to ${time(c.after)}. Its attributed change is ${fmt(c.attributedDelta)} Qloo-weighted clash minutes; the whole proposal changes that measure by ${fmt(r.after.cost - r.before.cost)}.`, { change: c, repairId: r.id, ledger: r.ledger, unknownChanges: r.unknownChanges });
+    add('change', changeText(c, r.after.cost - r.before.cost), { change: c, repairId: r.id, ledger: r.ledger, unknownChanges: r.unknownChanges });
   } else if (name === 'run_baseline') {
     const path = 'cache/baselines/comparison.json';
     const rows = existsSync(path) ? JSON.parse(readFileSync(path)).rows.filter(r => r.seedId === run.origin && r.kind === args.kind) : [];
@@ -219,14 +221,17 @@ export function replay(run, id, message, majorDrawSetIds) {
       fact.text = constraintText(c.kind, run.schedule.slots.filter(s => c.subjectIds.includes(s.id)).map(s => s.act));
     }
     if (fact.templateId === 'repair_summary') {
-      const historical = saved.steps.flatMap(s => s.result?.repairs || []).find(r => r.factRef === fact.id);
-      const acts = fact.data.acts || historical?.changes.map(c => c.act);
-      if (acts) fact.text = repairText(fact.data, acts, fact.data.unknownGuard || run.schedule.unknownGuard || 'pair');
+      const found = saved.steps.map(s => s.result?.repairs || []).find(list => list.some(r => r.factRef === fact.id)) || [];
+      const index = found.findIndex(r => r.factRef === fact.id), acts = fact.data.acts || found[index]?.changes.map(c => c.act);
+      if (acts) fact.text = repairText(fact.data, acts, fact.data.unknownGuard || run.schedule.unknownGuard || 'pair', index + 1, found.length);
     }
+    if (fact.templateId === 'schedule_metrics' && Number.isFinite(fact.data?.cost)) fact.text = metricsText(fact.data);
+    // A proposal's whole change is the sum of its strong-pair ledger.
+    if (fact.templateId === 'change' && fact.data?.change?.before && fact.data.change.after) fact.text = changeText(fact.data.change, (fact.data.ledger || []).reduce((sum, l) => sum + l.delta, 0));
   }
   saved.segments = saved.segments.map(segment => {
     const fact = saved.facts.find(f => f.id === segment.factRefs[0] && f.templateId === segment.templateId);
-    return fact ? { ...segment, text: fact.text } : segment;
+    return fact ? { ...segment, text: fact.text } : Object.hasOwn(questions, segment.templateId) ? { ...segment, text: questions[segment.templateId] } : segment;
   });
   // Replay is read-only historical evidence, never a source of applicable proposals.
   run.agent ||= { turns: [] };
