@@ -19,6 +19,8 @@ services:
       TRUST_PROXY: "1"
       # 1 serves saved Qloo evidence only and makes no new Qloo calls.
       QLOO_OFFLINE: ${QLOO_OFFLINE:-0}
+      # Two searches share the 1.5 CPUs; a III Points Saturday search alone takes about 24 s here.
+      MAX_SEARCHES: "2"
     volumes:
       - ${INTERVAL_CACHE_DIR:?set INTERVAL_CACHE_DIR to the private cache directory}:/app/cache
     networks:

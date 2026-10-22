@@ -239,9 +239,12 @@ agent searches. Further searches wait in a first-in, first-out queue of up to
 (202, run status `searching`) and the search starts when a slot frees. When the
 queue is full, repair/baseline requests and new live agent turns return 503 with
 `Interval is busy with other searches. Nothing changed; try again in a minute.`
-before changing run state. A search that waits 45 s without a slot fails the run
-with a plain reason and leaves the timetable and constraints unchanged. The 30 s
-worker timeout starts when the worker starts, not while it waits. Searches
+before changing run state. A search that waits 90 s without a slot fails the run
+with a plain reason and leaves the timetable and constraints unchanged. The 60 s
+worker timeout starts when the worker starts, not while it waits. The solver is
+deterministic, so identical inputs (timetable, constraints, evidence, seed and
+rule) share one search, including one still running; the API process keeps the
+last 50 results in memory. Searches
 initiated during an accepted agent turn use the same queue; a failed tool step
 retains the existing proposals. Slots remain held until the worker exits,
 including after timeout termination.

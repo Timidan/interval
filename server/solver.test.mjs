@@ -159,8 +159,8 @@ test('proxy handling, local health and scoring gate make no external calls', asy
     };
     assert.equal((await post(searchingRun, 'actions', { type: 'repair' })).status, 202);
     // With the one slot busy, the next repair waits in the queue instead of failing.
-    assert.equal((await post(waitingRun, 'actions', { type: 'repair' })).status, 202);
-    for (const [route, input] of [['actions', { type: 'repair', unknownGuard: 'net' }],
+    assert.equal((await post(waitingRun, 'actions', { type: 'repair', seed: 2 })).status, 202);
+    for (const [route, input] of [['actions', { type: 'repair', seed: 3, unknownGuard: 'net' }],
       ['actions', { type: 'baseline', kind: 'genre_only' }], ['messages', { message: 'Repair this' }]]) {
       const response = await post(fullRun, route, input);
       assert.equal(response.status, 503);
@@ -170,6 +170,10 @@ test('proxy handling, local health and scoring gate make no external calls', asy
     assert.equal(pending.length, 1);
     pending[0].emit('message', { repairs: [] }); pending[0].emit('exit', 0);
     await new Promise(resolve => setImmediate(resolve));
+    assert.equal(pending.length, 2);
+    // Identical inputs reuse the finished search instead of starting a worker.
+    const again = { ...structuredClone(searchingRun), id: randomUUID() }; saveRun(again);
+    assert.equal((await post(again, 'actions', { type: 'repair' })).status, 202);
     assert.equal(pending.length, 2);
     pending[1].emit('error', new Error('Simulated worker failure')); pending[1].emit('exit', 1);
     await new Promise(resolve => setImmediate(resolve));

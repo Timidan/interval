@@ -62,22 +62,34 @@ function searchSlot() {
   if (activeSearches < maxSearches) { activeSearches++; return Promise.resolve(); }
   return new Promise((resolve, reject) => {
     const start = () => { clearTimeout(timer); resolve(); };
-    const timer = setTimeout(() => { const i = queued.indexOf(start); if (i >= 0) queued.splice(i, 1); reject(fail(503, 'Interval stayed busy with other searches, so this search didn’t start.')); }, 45000);
+    const timer = setTimeout(() => { const i = queued.indexOf(start); if (i >= 0) queued.splice(i, 1); reject(fail(503, 'Interval stayed busy with other searches, so this search didn’t start.')); }, 90000);
     queued.push(start);
   });
 }
-async function searchWorker(run, weights, options = {}) {
-  await searchSlot();
+function runWorker(workerData) {
   return new Promise((resolve, reject) => {
     let worker;
-    try { worker = new Worker(new URL('./worker.mjs', import.meta.url), { workerData: { schedule: run.schedule, weights, options: { startSlots: run.current, ...options } } }); }
+    try { worker = new Worker(new URL('./worker.mjs', import.meta.url), { workerData }); }
     catch (error) { releaseSearch(); reject(error); return; }
     let received = false;
-    const timer = setTimeout(() => { void worker.terminate(); reject(fail(504, 'Repair search timed out. No completed repair was returned.')); }, 30000);
+    const timer = setTimeout(() => { void worker.terminate(); reject(fail(504, 'Repair search timed out. No completed repair was returned.')); }, 60000);
     worker.once('message', result => { received = true; clearTimeout(timer); resolve(result); });
     worker.once('error', () => { clearTimeout(timer); reject(fail(500, 'Repair search could not finish')); });
     worker.once('exit', code => { releaseSearch(); clearTimeout(timer); if (code !== 0 || !received) reject(fail(500, 'Repair search could not finish')); });
   });
+}
+// The solver is deterministic, so identical inputs share one search, including one still running.
+// ponytail: in-process memo, oldest entry evicted past 50; persist it if first searches after a restart prove too slow.
+const searches = new Map();
+function searchWorker(run, weights, options = {}) {
+  const workerData = { schedule: run.schedule, weights, options: { startSlots: run.current, ...options } }, key = hash(workerData);
+  if (!searches.has(key)) {
+    const search = searchSlot().then(() => runWorker(workerData)); // searchSlot throws here, synchronously, when the queue is full
+    search.catch(() => searches.delete(key));
+    searches.set(key, search);
+    if (searches.size > 50) searches.delete(searches.keys().next().value);
+  }
+  return searches.get(key);
 }
 // ponytail: fixed hourly window per process, reset on restart; a sliding window if hour-boundary bursts matter.
 const runsPerHour = 60; let opened = { hour: -1, ips: new Map() };
@@ -236,7 +248,6 @@ const server = createServer(async (req, res) => {
         if (input.type === 'baseline' && input.kind === 'llm_only') throw fail(409, 'Read prepared LLM comparisons through the agent; generation uses the isolated baseline script');
         if (input.type === 'baseline' && (input.kind !== 'genre_only' || run.origin !== 'acl-friday')) throw fail(409, 'Genre comparison is only prepared for ACL Friday');
         if (input.unknownGuard != null && !['pair', 'net'].includes(input.unknownGuard)) throw fail(400, 'Invalid unknown guard');
-        checkSearchCapacity();
         const weights = input.type === 'baseline'
           ? weightsFromRows(JSON.parse(readFileSync('cache/probes/genre-baseline.json', 'utf8')).rows).weights
           : run.snapshot.weights;
