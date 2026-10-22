@@ -12,7 +12,7 @@ import { Sheet } from '@/components/sheet';
 import { Stat } from '@/components/stat';
 import type { Clash, Repair, Run, SeedId, Slot as RunSlot, UnknownGuard } from '@/lib/api';
 import { useRun } from '@/lib/use-run';
-import { clock, daySets, dayStages, festival, fromRun, overlapPairs, plural, sheetSlot, span, type Festival, type Slot } from '@/lib/timetable';
+import { clock, concurrent, daySets, dayStages, festival, fromRun, overlapPairs, plural, sheetSlot, span, type Festival, type Slot } from '@/lib/timetable';
 
 const SEEDS: Record<string, SeedId> = { '2026-10-02': 'acl-friday', '2026-10-16': 'iii-friday', '2026-10-17': 'iii-saturday' };
 const at = (s: RunSlot) => clock(s.start - Date.parse(`${s.day}T00:00:00Z`) / 60000);
@@ -21,7 +21,7 @@ const longDate = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateStrin
 const date = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** The running order as an Apple-style grouped list: one rounded group per stage, a state bar per set. */
-function ListView({ sets, stages, clashIds, movedIds }: { sets: Slot[]; stages: string[]; clashIds: Set<string>; movedIds: Set<string> }) {
+function ListView({ sets, stages, clashIds, movedIds, pinned, onPin, actions }: { sets: Slot[]; stages: string[]; clashIds: Set<string>; movedIds: Set<string>; pinned: string | null; onPin: (id: string | null) => void; actions: (s: Slot) => React.ReactNode }) {
   const bar = (s: Slot) => (clashIds.has(s.id) ? 'bg-marker' : movedIds.has(s.id) ? 'bg-cue' : s.b2b || s.unknown ? 'bg-unknown' : 'bg-event');
   return (
     <div className="paper grid grid-cols-[minmax(0,1fr)] gap-6 text-ink sm:grid-cols-2 xl:grid-cols-3">
@@ -30,7 +30,9 @@ function ListView({ sets, stages, clashIds, movedIds }: { sets: Slot[]; stages: 
           <h3 className="px-1 pb-2 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-ink-2">{st}</h3>
           <ul className="overflow-hidden rounded-[14px] bg-paper-2 ring-1 ring-paper-line/70">
             {sets.filter(s => s.stage === st).sort((a, b) => a.start - b.start).map(s => (
-              <li key={s.id} className="flex items-center gap-3 border-b border-paper-line px-3 py-2.5 last:border-b-0">
+              <li key={s.id} className="border-b border-paper-line last:border-b-0">
+                <button type="button" aria-pressed={pinned === s.id} onClick={() => onPin(pinned === s.id ? null : s.id)}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-start transition-colors duration-150 hover:bg-paper-line/40 aria-pressed:bg-paper-line/50">
                 <span aria-hidden="true" className={cn('w-[3px] self-stretch rounded-full', bar(s))} />
                 <span className="w-[4.25rem] shrink-0 text-[0.8125rem] leading-[1.25] tabular-nums">
                   <span className="block font-medium text-ink">{clock(s.start)}</span>
@@ -40,6 +42,13 @@ function ListView({ sets, stages, clashIds, movedIds }: { sets: Slot[]; stages: 
                 {clashIds.has(s.id) && <span className="inline-flex shrink-0 items-center gap-1 text-[0.75rem] font-semibold text-marker-ink"><Intersect size={13} weight="bold" />Clash</span>}
                 {s.held && <span className="inline-flex shrink-0 items-center gap-1 text-[0.75rem] font-medium text-ink-2"><LockSimple size={12} weight="fill" />Held</span>}
                 {(s.b2b || s.unknown) && <span className="shrink-0 text-[0.75rem] font-medium text-ink-2">{s.b2b ? 'b2b · unknown' : 'Unknown'}</span>}
+                </button>
+                {pinned === s.id && (
+                  <div className="space-y-2 px-3 pb-3 ps-[1.6875rem]">
+                    <p className="text-[0.8125rem] leading-[1.6] text-ink-2">Plays at the same time as {plural(concurrent(sets, s).length, 'set', 'sets')} on other stages.</p>
+                    {actions(s)}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -216,6 +225,14 @@ export function SheetPage() {
     : shownGhosts ? 'Change applied.' : '';
 
   const reset = () => { setPinned(null); setPick(undefined); setNotice(''); };
+  const holdControl = (s: Slot) => s.unknown
+    ? <p className="text-[0.8125rem] leading-[1.6] text-ink-2">Qloo can’t identify {s.act}, so Interval never moves this set.</p>
+    : (
+      <button type="button" disabled={busy} onClick={() => hold(s)} className={capsule}>
+        {s.held ? <LockSimpleOpen aria-hidden="true" size={15} weight="bold" /> : <LockSimple aria-hidden="true" size={15} weight="bold" />}
+        {s.held ? `Release ${s.act}` : `Hold ${s.act} here`}
+      </button>
+    );
   const apply = async (r: Repair) => {
     if (run && await act({ type: 'apply', expectedVersion: run.version, repairId: r.id })) { setGhosts({ seed: run.id, slots: r.changes.map(c => sheetSlot(c.before)) }); setPick(undefined); setNotice(''); }
   };
@@ -362,19 +379,8 @@ export function SheetPage() {
                   <span id="after-sheet" tabIndex={-1} />
                 </>
               )
-              : <ListView sets={sets} stages={stages} clashIds={clashIds} movedIds={new Set(sheetGhosts?.map(g => g.id))} />}
-            {selected && run && (
-              <div className="mt-1 flex flex-wrap items-center gap-3">
-                {selected.unknown ? (
-                  <p className="text-[0.8125rem] leading-[1.6] text-ink-2">Qloo can’t identify {selected.act}, so Interval never moves this set.</p>
-                ) : (
-                  <button type="button" disabled={busy} onClick={() => hold(selected)} className={capsule}>
-                    {selected.held ? <LockSimpleOpen aria-hidden="true" size={15} weight="bold" /> : <LockSimple aria-hidden="true" size={15} weight="bold" />}
-                    {selected.held ? `Release ${selected.act}` : `Hold ${selected.act} here`}
-                  </button>
-                )}
-              </div>
-            )}
+              : <ListView sets={sets} stages={stages} clashIds={clashIds} movedIds={new Set(sheetGhosts?.map(g => g.id))} pinned={pinned} onPin={setPinned} actions={s => (run && !preview ? holdControl(s) : null)} />}
+            {selected && run && <div className="mt-1 flex flex-wrap items-center gap-3">{holdControl(selected)}</div>}
           </div>
 
           {error && <p role="alert" className="flex items-start gap-2.5 rounded-[4px] border border-chalk/25 bg-stage/70 px-4 py-3 text-[0.9375rem] leading-6 text-chalk"><WarningCircle size={18} weight="bold" className="mt-0.5 shrink-0" />{error}</p>}
