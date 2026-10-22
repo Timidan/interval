@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { ArrowCounterClockwise, ArrowLeft, ArrowRight, Check, Eye, Intersect, LockSimple, LockSimpleOpen, MagnifyingGlass, Rows, Table, WarningCircle } from '@phosphor-icons/react';
 import { cn } from 'cn';
 import { buttonClass } from '@/components/button';
@@ -35,7 +36,7 @@ function ListView({ sets, stages, clashIds, movedIds }: { sets: Slot[]; stages: 
                   <span className="block font-medium text-ink">{clock(s.start)}</span>
                   <span className="block text-ink-2">{clock(s.end)}</span>
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold">{s.act}</span>
+                <span className="min-w-0 flex-1 text-pretty text-[0.9375rem] font-semibold leading-snug [overflow-wrap:anywhere]">{s.act}</span>
                 {clashIds.has(s.id) && <span className="inline-flex shrink-0 items-center gap-1 text-[0.75rem] font-semibold text-marker-ink"><Intersect size={13} weight="bold" />Clash</span>}
                 {s.held && <span className="inline-flex shrink-0 items-center gap-1 text-[0.75rem] font-medium text-ink-2"><LockSimple size={12} weight="fill" />Held</span>}
                 {(s.b2b || s.unknown) && <span className="shrink-0 text-[0.75rem] font-medium text-ink-2">{s.b2b ? 'b2b · unknown' : 'Unknown'}</span>}
@@ -193,7 +194,7 @@ export function SheetPage() {
   const opener = useRef<HTMLElement | null>(null);
   const card = useRef<HTMLDivElement>(null);
   const openEvidence = useCallback((c: Clash) => { opener.current = document.activeElement as HTMLElement | null; setEvidence(c); }, []);
-  const closeEvidence = useCallback(() => { setEvidence(null); window.setTimeout(() => opener.current?.focus(), 0); }, []);
+  const closeEvidence = useCallback(() => { flushSync(() => setEvidence(null)); opener.current?.focus(); }, []);
 
   const local = useMemo(() => (runId ? [] : daySets(f, day)), [runId, f, day]);
   const current = useMemo(() => (run ? fromRun(run, day) : { sets: local, stages: dayStages(f, local) }), [run, day, f, local]);
@@ -206,10 +207,11 @@ export function SheetPage() {
   const pairs = useMemo(() => overlapPairs(current.sets), [current]);
   const b2b = sets.filter(s => s.b2b).length;
   const selected = view === 'sheet' && !preview ? sets.find(s => s.id === pinned) ?? null : null;
-  const canRepair = !!run && !busy && !!run.metrics && (run.status === 'ready' || run.status === 'none_found');
+  const canRepair = !!run && !busy && !!run.metrics && (run.status === 'ready' || run.status === 'none_found' || run.status === 'failed');
   const strict = run?.schedule.unknownGuard !== 'net';
   const repairStatus = !run ? '' : run.status === 'searching' ? 'Searching for tested changes.'
     : run.status === 'none_found' ? 'No tested change found.'
+    : run.status === 'failed' ? 'The search didn’t finish.'
     : run.repairs.length ? `${plural(run.repairs.length, 'tested change', 'tested changes')} found.${preview ? ` The sheet shows change ${previewN}, not applied.` : ''}`
     : shownGhosts ? 'Change applied.' : '';
 
@@ -320,6 +322,26 @@ export function SheetPage() {
                 </div>
               </div>
             )}
+            {!preview && run && (run.status === 'searching' || run.status === 'none_found' || run.status === 'failed') && (
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[14px] bg-paper-2 px-4 py-3 text-ink ring-1 ring-paper-line">
+                {run.status === 'searching' ? <p className="font-mono text-[0.8125rem] text-ink-2">Searching tested changes that keep every hold…</p> : (
+                  <>
+                    <div className="min-w-0">
+                      <p className="text-[0.9375rem] font-semibold leading-snug">{run.status === 'none_found' ? 'No tested change found' : run.reason ?? 'The search stopped early.'}</p>
+                      <p className="mt-1 max-w-[72ch] text-pretty text-[0.8125rem] leading-snug text-ink-2">
+                        {run.status === 'none_found' ? `${run.reason ?? ''} ` : ''}The draft stays as it is.
+                        {run.status === 'none_found' && (strict ? ' The strict rule rejects any change that adds overlap to a pair with an act Qloo can’t identify; the looser rule only stops their total overlap from growing.' : ' Releasing a hold gives the search more room.')}
+                      </p>
+                    </div>
+                    {(run.status === 'failed' || strict) && (
+                      <button type="button" disabled={!canRepair} onClick={() => repair(run.status === 'failed' ? undefined : 'net')} className={capsule}>
+                        <MagnifyingGlass aria-hidden="true" size={15} weight="bold" />{run.status === 'failed' ? 'Search again' : 'Search again with the looser rule'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
             {!preview && run?.canUndo && (
               <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[14px] bg-paper-2 px-4 py-3 text-ink ring-1 ring-paper-line">
                 <p className="text-[0.875rem] leading-snug text-ink-2">{shownGhosts ? 'Change applied. Dashed outlines show where the moved sets were; green shows where they play now.' : 'A tested change is applied.'}</p>
@@ -356,24 +378,6 @@ export function SheetPage() {
               <div className="shimmer-dark h-6 w-2/3 rounded-[2px]" />
               <div className="shimmer-dark h-3 w-full rounded-[2px]" />
             </div>
-          )}
-          {run?.status === 'searching' && <p className={cn(panel, 'font-mono text-[0.8125rem] text-chalk-2')}>Searching tested changes that keep every hold…</p>}
-          {run?.status === 'none_found' && (
-            <section className={panel}>
-              <h2 className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">No tested change found</h2>
-              <p className="mt-2 text-[0.9375rem] leading-[1.6] text-chalk-2">{run.reason} The draft stays as it is.</p>
-              {strict && (
-                <>
-                  <p className="mt-2 text-[0.9375rem] leading-[1.6] text-chalk-2">
-                    The strict rule rejects any change that adds overlap to a pair with an act Qloo can’t identify. The looser rule only stops their total overlap from growing.
-                  </p>
-                  <button type="button" disabled={!canRepair} onClick={() => repair('net')} className={buttonClass('ghost', 'mt-4 h-11 px-4')}>
-                    <MagnifyingGlass size={16} weight="bold" />Search again with the looser rule
-                  </button>
-                </>
-              )}
-              {!strict && <p className="mt-2 text-[0.9375rem] leading-[1.6] text-chalk-2">Releasing a hold gives the search more room.</p>}
-            </section>
           )}
           {run?.repairs.map((r, i) => <Proposal key={r.id} repair={r} n={i + 1} total={run.repairs.length} shown={preview?.id === r.id}
             onShow={() => {

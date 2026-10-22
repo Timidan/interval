@@ -31,7 +31,8 @@ export function useRun(source: RunSource | null) {
     }
     load.then(r => alive && save(r)).catch(e => {
       if (!alive) return;
-      setError(e instanceof ApiError && e.status === 404 ? 'This running order isn’t available in this browser. Import it again to continue.' : 'The Interval API isn’t responding, so no Qloo evidence is shown.');
+      setError(e instanceof ApiError && e.status === 404 ? 'This running order isn’t available in this browser. Import it again to continue.'
+        : e instanceof ApiError && e.status === 429 ? e.detail.reason : 'The Interval API isn’t responding, so no Qloo evidence is shown.');
     });
     return () => { alive = false; };
   }, [key, save]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -39,7 +40,10 @@ export function useRun(source: RunSource | null) {
   const busy = !!run && BUSY.includes(run.status);
   useEffect(() => {
     if (!run || !busy) return;
-    const t = window.setTimeout(() => api.run(run.id).then(save).catch(() => {}), 900);
+    // A failed check (a network blip, an API restart) retries instead of leaving the page stuck on "Searching…".
+    let t = 0;
+    const poll = (ms: number) => { t = window.setTimeout(() => api.run(run.id).then(save).catch(() => poll(3000)), ms); };
+    poll(900);
     return () => window.clearTimeout(t);
   }, [run, busy, save]);
 
