@@ -366,7 +366,7 @@ export function Landing() {
       </section>
 
       <LineupMarquee sets={sets} clashIds={clashIds} />
-      <Statement pairs={pairs} strong={run ? strongClashes.length : null} unknown={run ? run.clashes.filter(c => c.weight == null).length : null} />
+      <Statement pairs={pairs} strong={run ? strongClashes.length : null} unknown={run ? run.metrics?.unknownClashes ?? 0 : null} />
 
       <section id="how" ref={story} className="mx-auto grid max-w-[92rem] grid-cols-[minmax(0,1fr)] gap-10 px-5 pb-32 sm:px-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-16">
         <div className="relative">

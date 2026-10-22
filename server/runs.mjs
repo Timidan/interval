@@ -70,7 +70,7 @@ export function view(run) {
   const { owner, undo, agentPrivate, ...safe } = run;
   const c = coverage(run);
   return { ...safe, snapshot: snapshotSummary(run.snapshot), metrics: c.usablePairs ? metrics(run.current, run.snapshot.weights, run.schedule.buffer) : null,
-    clashes: clashes(run), coverage: c, canUndo: undo.length > 0, validity: validate(run.schedule, run.current, run.snapshot?.weights || {}) };
+    clashes: clashes(run).filter(clash => clash.weight != null), coverage: c, canUndo: undo.length > 0, validity: validate(run.schedule, run.current, run.snapshot?.weights || {}) };
 }
 export function pairEvidence(run, ref) {
   if (!run.snapshot) return null;

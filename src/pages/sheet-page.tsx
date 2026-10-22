@@ -73,7 +73,7 @@ const unknownTotal = (before: number, after: number) => after === before ? `Thei
 const panel = 'rounded-[4px] border border-chalk/12 bg-haze/80 p-5 backdrop-blur-md';
 
 function Warnings({ run, strong, onOpen, onRule, busy }: { run: Run; strong: Clash[]; onOpen: (c: Clash) => void; onRule: (g: UnknownGuard) => void; busy: boolean }) {
-  const unknown = run.clashes.filter(c => c.weight == null).length;
+  const unknown = run.metrics?.unknownClashes ?? 0;
   const net = run.schedule.unknownGuard === 'net';
   return (
     <section id="clash-warnings" aria-label="Clash warnings" className={cn(panel, 'scroll-mt-5')}>
