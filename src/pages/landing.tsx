@@ -140,9 +140,8 @@ function Statement({ pairs, strong, unknown }: { pairs: number; strong: number |
   return (
     <section ref={ref} aria-label="What Qloo changes" className="mx-auto grid max-w-[92rem] grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-12 px-5 py-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:py-36">
       <div>
-        <p className="font-mono text-[0.75rem] uppercase tracking-[0.14em] text-chalk-2">ACL Friday, as published</p>
-        <RollingNumber value={seen ? String(pairs) : pad(pairs)} className="outline-type mt-4 font-display text-[clamp(6rem,17vw,16rem)] font-extrabold leading-[0.9] tracking-[-0.05em]" />
-        <p className="mt-2 font-display text-[clamp(1.125rem,1.7vw,1.625rem)] font-bold uppercase leading-tight">Overlapping pairs</p>
+        <RollingNumber value={seen ? String(pairs) : pad(pairs)} className="outline-type font-display text-[clamp(6rem,17vw,16rem)] font-extrabold leading-[0.9] tracking-[-0.05em]" />
+        <p className="mt-2 font-display text-[clamp(1.125rem,1.7vw,1.625rem)] font-bold uppercase leading-tight">Overlapping pairs, as published</p>
       </div>
       <div className="lg:pb-2">
         {strong == null
@@ -216,7 +215,6 @@ export function Landing() {
             <Stat label="Stages" value={stageNames.length} />
             <Stat label="Overlaps" value={pairs} />
           </div>
-          <p className="mt-5 text-[0.875rem] leading-[1.6] text-chalk-2">Overlaps are pairs of sets playing at the same time on different stages.</p>
         </>
       ),
     },
@@ -239,7 +237,7 @@ export function Landing() {
           <pre className="mt-6 overflow-x-auto rounded-[3px] border border-chalk/15 bg-stage/70 p-4 font-mono text-[0.8125rem] leading-[1.6] text-chalk">{QLOO_REQUEST}</pre>
           <p className="mt-4 text-chalk-2">
             {clash
-              ? <>On this Friday that’s {clash.acts[0]} and {clash.acts[1]}, who overlap by {clash.overlapMinutes} minutes. {reading} Qloo identifies {run?.coverage.confirmed} of the {run?.coverage.acts} acts; the rest are striped grey and stay unknown.</>
+              ? <>On this Friday that’s {clash.acts[0]} and {clash.acts[1]}, who overlap by {clash.overlapMinutes} minutes. {reading} Qloo identifies {run?.coverage.confirmed} of the {run?.coverage.acts} acts.</>
               : "This page couldn’t load the saved Qloo snapshot, so no clash is marked."}
           </p>
         </>
@@ -327,10 +325,7 @@ export function Landing() {
       <main id="main">
       <section className="relative mx-auto grid min-h-[100dvh] max-w-[92rem] grid-cols-[minmax(0,1fr)] gap-12 px-5 pt-28 pb-14 sm:px-8 lg:grid-cols-[minmax(0,1.32fr)_minmax(0,1fr)] lg:gap-10 lg:pt-24">
         <div className="@container lg:self-end">
-          <p className="rise font-mono text-[0.75rem] uppercase tracking-[0.14em] text-chalk-2" style={order(0)}>
-            ACL 2026 · Weekend 1 · Friday · {plural(sets.length, 'set', 'sets')} on {plural(stageNames.length, 'stage', 'stages')}
-          </p>
-          <h1 className="rise mt-5 font-display text-[min(13.6cqi,8rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.03em] text-chalk" style={order(1)}>
+          <h1 className="rise font-display text-[min(13.6cqi,8rem)] font-extrabold uppercase leading-[0.86] tracking-[-0.03em] text-chalk" style={order(1)}>
             <ShaderText lines={['Fix the', 'clashes']} />
           </h1>
           <p className="rise mt-8 max-w-[34rem] text-[clamp(1rem,1.2vw,1.1875rem)] leading-[1.6] text-chalk/80" style={order(2)}>{PRODUCT_SENTENCE}</p>

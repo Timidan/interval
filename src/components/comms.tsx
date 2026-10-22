@@ -116,17 +116,12 @@ export function Comms({ run, send, className }: { run?: Run; send: (body: Omit<M
         <span className="font-mono text-[0.75rem] uppercase tracking-[0.12em] text-chalk-2">{health?.model ?? 'Agent'} · {status}</span>
       </div>
 
-      {turns.length === 0 && (
-        <p className="text-[0.875rem] leading-[1.6] text-chalk-2">
-          Ask for a change in plain words. The agent turns it into constraints, runs the search, and answers only with facts its tools returned.
-        </p>
-      )}
       {paused && (
         <p className="text-[0.875rem] leading-[1.6] text-chalk/90">
           {health.status === 'limited'
-            ? `Live answers are paused: Interval’s model-call allowance is used up${health.retry_at ? ` until ${clockAt(health.retry_at)}` : ''}.`
+            ? `Live answers are paused${health.retry_at ? ` until ${clockAt(health.retry_at)}` : ''}.`
             : 'Live answers are unavailable right now.'}
-          {recordings.length > 0 ? ' The recorded answers below still replay.' : ' Recorded answers only replay on the exact running order and rules they were recorded on.'}
+          {recordings.length > 0 ? ' Recorded answers still replay.' : ''}
         </p>
       )}
       <ol aria-live="polite" aria-label="Conversation" className={cn('max-h-[52vh] space-y-5 overflow-y-auto overscroll-contain pe-1', !turns.length && 'hidden')}>
@@ -159,9 +154,6 @@ export function Comms({ run, send, className }: { run?: Run; send: (body: Omit<M
           </button>
         </div>
         {thinking && <div aria-hidden="true" className="shimmer-dark mt-2 h-1 w-full rounded-full" />}
-        <p className="mt-2 text-[0.75rem] leading-5 text-chalk-2">
-          {thinking ? 'Working on it. Each step appears as it actually runs.' : paused ? 'Recorded answers say when they were recorded.' : 'Live answers come from gpt-5.6-luna. Recorded answers say when they were recorded.'}
-        </p>
       </form>
     </aside>
   );

@@ -15,7 +15,6 @@ class PageError extends Component<{ children: ReactNode }, { failed: boolean }> 
     return (
       <main className="mx-auto max-w-xl px-5 py-24">
         <h1 className="font-display text-[clamp(1.75rem,5vw,2.25rem)] font-extrabold uppercase leading-[1] text-chalk">This page hit an error</h1>
-        <p className="mt-4 text-[0.9375rem] leading-[1.6] text-chalk-2">Reload to try again. If it keeps happening, start from the front page.</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <button type="button" onClick={() => window.location.reload()} className={buttonClass('primary', 'h-12 px-5')}>Reload the page</button>
           <a href="/" className={buttonClass('ghost', 'h-12 px-5')}>Go to the front page</a>

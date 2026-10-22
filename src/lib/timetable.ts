@@ -78,7 +78,7 @@ export const FESTIVALS: Festival[] = [
     source: 'official C3 schedule image',
     sourceUrl: 'https://www.aclfestival.com/schedule',
     verified: 'Oct 12, 2026',
-    holds: 'Inferred holds, loosened to billing bands for this scenario',
+    holds: 'Inferred holds, loosened to billing bands',
     notShown: "Kids' area and silent disco not shown",
     days: [{ id: '2026-10-02', label: 'Fri' }],
     stages: ordered(acl.map(r => r.stage)),
@@ -101,7 +101,7 @@ export const FESTIVALS: Festival[] = [
     source: 'official set-times page',
     sourceUrl: 'https://www.iiipoints.com/set-times/',
     verified: 'Oct 12, 2026',
-    holds: 'No holds set for this scenario',
+    holds: 'No holds set',
     days: [{ id: '2026-10-16', label: 'Fri' }, { id: '2026-10-17', label: 'Sat' }],
     stages: ordered(iii.map(r => r.stage)),
     sets: iii.map((r, i) => ({

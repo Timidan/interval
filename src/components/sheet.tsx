@@ -152,7 +152,7 @@ export function Sheet({ sets, stages, clashIds, ghosts, variant = 'full', emphas
         <p aria-live="polite" className="mt-4 min-h-6 max-w-[72ch] text-pretty text-[0.875rem] leading-[1.6] text-ink-2">
           {active
             ? <><span className="font-semibold text-ink">{active.act}</span> · {active.stage} · <span className="tabular-nums">{span(active)}</span> · plays at the same time as {together.size} {together.size === 1 ? 'set' : 'sets'} on other stages.</>
-            : 'Select a set to see what plays at the same time on other stages. An overlap is a timetable fact; whether it splits one audience needs Qloo evidence.'}
+            : null}
         </p>
       )}
     </div>

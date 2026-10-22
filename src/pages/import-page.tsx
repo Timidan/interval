@@ -47,9 +47,6 @@ export function ImportPage() {
       <main className="rise mx-auto mt-10 max-w-3xl space-y-5 px-5 pb-24" style={{ '--i': 1 } as React.CSSProperties}>
         <div>
           <h1 className="font-display text-[clamp(1.75rem,5vw,2.75rem)] font-extrabold uppercase leading-[0.95] tracking-[-0.01em] text-chalk">Import a draft</h1>
-          <p className={cn(body, 'mt-4 max-w-[62ch] text-pretty')}>
-            Paste a draft as CSV. Interval matches each act to Qloo, tells you how many Qloo calls scoring needs before it runs, then finds clashes and tested changes the same way it does for the sample festivals.
-          </p>
         </div>
         {error && <p role="alert" className="flex items-start gap-2.5 rounded-[4px] border border-chalk/25 bg-stage/70 px-4 py-3 text-[0.9375rem] leading-6 text-chalk"><WarningCircle size={18} weight="bold" className="mt-0.5 shrink-0" />{error}</p>}
         {!runId ? <Paste onCreated={r => { save(r); setRunId(r.id); window.history.replaceState(null, '', `/import?run=${r.id}`); }} />
@@ -88,7 +85,7 @@ function Paste({ onCreated }: { onCreated: (r: Run) => void }) {
       </div>
       <label htmlFor="csv" className="mt-5 block text-[0.875rem] font-medium text-chalk">Running order as CSV</label>
       <p id="csv-help" className="mt-1 max-w-[68ch] text-pretty text-[0.8125rem] leading-[1.6] text-chalk-2">
-        Columns: day, stage, act, start, end, with local times such as 19:30 or 7:30 PM. Cells pasted from a spreadsheet work too. Up to 150 sets and 60 acts.
+        Columns: day, stage, act, start, end. Up to 150 sets and 60 acts.
       </p>
       <details className="mt-1 text-[0.8125rem] leading-[1.6] text-chalk-2">
         <summary className="cursor-pointer text-chalk underline decoration-chalk/35 underline-offset-4">Optional columns</summary>
@@ -130,7 +127,7 @@ function Steps({ run, busy, save, setError }: { run: Run; busy: boolean; save: (
       <section className={panel}>
         <Step n={1}>Draft checked</Step>
         <p className={cn(body, 'mt-2')}>
-          {plural(run.schedule.slots.length, 'set', 'sets')} by {plural(run.identities.length, 'act', 'acts')} across {plural(stages, 'stage', 'stages')} on {plural(days, 'day', 'days')}, in {run.timezone.replace(/_/g, ' ')}. Every set fits its stage without overlap.
+          {plural(run.schedule.slots.length, 'set', 'sets')} by {plural(run.identities.length, 'act', 'acts')} across {plural(stages, 'stage', 'stages')} on {plural(days, 'day', 'days')}, in {run.timezone.replace(/_/g, ' ')}.
         </p>
       </section>
       {unlooked.length > 0 || run.status === 'resolving'
@@ -173,7 +170,7 @@ function Lookup({ run, count, busy, save, setError }: { run: Run; count: number;
           : `Looking up ${plural(count, 'act', 'acts')} takes ${plural(estimate.estimatedCalls, 'Qloo call', 'Qloo calls')}, and at most ${estimate.maximumCalls} if some need a retry.`}
         {run.schedule.slots.some(s => /\bb2b\b/i.test(s.label)) ? ' b2b sets stay unknown: their artists are never merged into one identity.' : ''}
       </p>
-      {working && <p role="status" className="mt-3 font-mono text-[0.8125rem] text-chalk-2">Looking up acts on Qloo. This takes about a second per act.</p>}
+      {working && <p role="status" className="mt-3 font-mono text-[0.8125rem] text-chalk-2">Looking up acts on Qloo…</p>}
       {working && <div aria-hidden="true" className="shimmer-dark mt-3 h-1 w-full rounded-full" />}
       <button type="button" disabled={!estimate || working} onClick={go} className={buttonClass('primary', 'mt-5 h-12 px-5')}>
         <MagnifyingGlass size={16} weight="bold" />{estimate?.live && estimate.estimatedCalls > 0 ? `Look up acts · up to ${plural(estimate.maximumCalls, 'call', 'calls')}` : 'Look up acts'}
@@ -187,7 +184,6 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
   // Only a person's earlier review is preselected, never a name match: Qloo often has several artists with one name
   // (ACL's Leon Thomas is "Leon Thomas III", not the jazz singer). The programmer still saves every choice.
   const [choice, setChoice] = useState<Record<string, string>>(() => Object.fromEntries(acts.filter(i => i.status === 'ambiguous' && i.suggestedRef).map(i => [i.act, i.suggestedRef!])));
-  const reviewed = acts.find(i => i.status === 'ambiguous' && i.suggestedFrom)?.suggestedFrom;
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const pending = acts.filter(i => i.status === 'ambiguous');
@@ -216,7 +212,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
       <section className={panel}>
         <Step n={3}>Matches confirmed</Step>
         <p className={cn(body, 'mt-2')}>
-          {plural(matched.length, 'act is', 'acts are')} matched to Qloo artists; the other {acts.length - matched.length} stay unknown. The scores depend on these matches, so they’re fixed now. To try different matches, import the draft again.
+          {plural(matched.length, 'act is', 'acts are')} matched to Qloo artists; the other {acts.length - matched.length} stay unknown. To change matches, import the draft again.
         </p>
         <details className="mt-4">
           <summary className="cursor-pointer text-[0.875rem] font-medium text-chalk underline decoration-chalk/35 underline-offset-4">Show every match</summary>
@@ -236,8 +232,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
     <section className={panel}>
       <Step n={3}>Confirm the matches</Step>
       <p className={cn(body, 'mt-2')}>
-        {pending.length ? `Pick the Qloo artist for each act. Names repeat, so check the description. Acts you skip stay unknown.${reviewed ? ` Matches a person already confirmed for ${reviewed} are preselected.` : ''}`
-          : 'Every act is settled. Acts without a match stay unknown: Interval never moves them and never treats their pairs as zero.'}
+        {pending.length ? 'Pick the Qloo artist for each act. Acts you skip stay unknown.' : 'Every act is settled.'}
       </p>
       {pending.length > 0 && (
         <ul className="mt-5 space-y-5">
@@ -246,7 +241,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
               <fieldset>
                 <legend className="font-narrow text-[1.25rem] font-semibold uppercase leading-tight text-chalk">{i.act}</legend>
                 <div className="mt-2 grid gap-2">
-                  {[...i.candidates.map(c => ({ ref: c.ref, title: c.name, tag: c.ref === i.suggestedRef ? 'Reviewed match' : c.name.toLowerCase() === i.act.toLowerCase() ? 'Same name' : null, detail: [c.genres.slice(0, 3).join(', '), c.description].filter(Boolean).join(' · ') })), { ref: 'none', title: 'None of these', tag: null, detail: 'The act stays unknown.' }]
+                  {[...i.candidates.map(c => ({ ref: c.ref, title: c.name, tag: c.ref === i.suggestedRef ? 'Reviewed match' : c.name.toLowerCase() === i.act.toLowerCase() ? 'Same name' : null, detail: [c.genres.slice(0, 3).join(', '), c.description].filter(Boolean).join(' · ') })), { ref: 'none', title: 'None of these', tag: null, detail: '' }]
                     .filter((o, k) => expanded[i.act] || k < 2 || o.ref === 'none' || o.ref === choice[i.act]).map(o => (
                     <label key={o.ref} className={cn('flex cursor-pointer items-start gap-3 rounded-[3px] border px-3 py-2.5 transition-colors duration-150', choice[i.act] === o.ref ? 'border-chalk/60 bg-chalk/[0.07]' : 'border-chalk/12 hover:border-chalk/35')}>
                       <input type="radio" name={`match-${i.act}`} value={o.ref} checked={choice[i.act] === o.ref} onChange={() => setChoice(m => ({ ...m, [i.act]: o.ref }))} className="mt-1 size-4 shrink-0 accent-[var(--color-chalk)]" />
@@ -270,7 +265,7 @@ function Matches({ run, save, setError }: { run: Run; save: (r: Run) => void; se
       )}
       {pending.length > 0 && (
         <div className="sticky bottom-[4.25rem] z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[4px] xl:bottom-4 border border-chalk/15 bg-stage/95 px-4 py-3 shadow-[0_18px_40px_-20px_oklch(0.122_0.009_268.083_/_0.95)] backdrop-blur-md">
-          <p className="text-[0.875rem] text-chalk-2 tnum">{chosen.length} of {plural(pending.length, 'act', 'acts')} chosen{chosen.length < pending.length ? '. The rest stay unknown.' : ''}</p>
+          <p className="text-[0.875rem] text-chalk-2 tnum">{chosen.length} of {plural(pending.length, 'act', 'acts')} chosen</p>
           <button type="button" disabled={!chosen.length || saving} onClick={confirm} className={buttonClass('primary', 'h-12 px-5')}>
             <Check size={16} weight="bold" />{saving ? 'Saving…' : `Save ${plural(chosen.length, 'choice', 'choices')}`}
           </button>
@@ -333,7 +328,7 @@ function Score({ run, busy, save, setError }: { run: Run; busy: boolean; save: (
     <section className={panel} aria-busy={scoring}>
       <Step n={4}>Score the confirmed acts</Step>
       <p className={cn(body, 'mt-2')}>
-        {short ? `Scoring needs at least ${MIN_SCORED} confirmed acts, and ${confirmed} ${confirmed === 1 ? 'is' : 'are'} confirmed. Qloo’s scores are compared within each act’s list, and a shorter list can’t tell strong links from weak ones.`
+        {short ? `Scoring needs at least ${MIN_SCORED} confirmed acts, and ${confirmed} ${confirmed === 1 ? 'is' : 'are'} confirmed.`
           : !estimate ? 'Checking what scoring costs…'
           : estimate.estimatedCalls === 0 ? `Every comparison between these ${plural(confirmed, 'act', 'acts')} is already saved, so scoring uses no Qloo calls.`
           : unsaved ? `This demo uses saved Qloo data only, and ${plural(estimate.estimatedCalls, 'request these matches need isn’t', 'requests these matches need aren’t')} saved, so it can’t score them here. The reviewed matches of the ACL Friday sample score from saved data; to score your own lineup, run Interval with a Qloo key.`

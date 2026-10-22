@@ -45,7 +45,7 @@ export function Comparison({ seedId }: { seedId: SeedId }) {
     <section aria-labelledby="comparison-title" className="rounded-[4px] border border-chalk/12 bg-haze/80 p-5 backdrop-blur-md">
       <h2 id="comparison-title" className="font-display text-[0.875rem] font-bold uppercase tracking-[0.06em]">Compared with other approaches</h2>
       <p className="mt-2 max-w-[72ch] text-pretty text-[0.8125rem] leading-[1.6] text-chalk-2">
-        Every row is measured the same way, on the published timetable. The LLM-only trials saw the act names, set times and the same rules, but no Qloo scores. The genre rows use genre labels gathered before any Qloo data.
+        Every row is scored the same way; the LLM-only and genre rows had no Qloo scores.
       </p>
       {data ? (
         <div tabIndex={0} role="region" aria-label="Comparison table" className="relative -mx-5 mt-4 overflow-x-auto overscroll-x-contain px-2">
@@ -94,7 +94,7 @@ export function Comparison({ seedId }: { seedId: SeedId }) {
       )}
       {data && (
         <p className="mt-4 max-w-[72ch] text-pretty text-[0.8125rem] leading-[1.6] text-chalk-2">
-          Prepared {new Date(data.frozenAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, before this page loaded. A retrospective comparison of timetables, not of audience outcomes.
+          Prepared {new Date(data.frozenAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.
         </p>
       )}
     </section>

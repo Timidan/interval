@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { cn } from 'cn';
-import { Graph, X } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import { api, type Clash, type PairEvidence } from '@/lib/api';
 
 const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
@@ -38,10 +38,9 @@ export function EvidenceDrawer({ runId, clash, onClose }: { runId: string; clash
         className={cn('paper flex h-full w-full max-w-[34rem] flex-col gap-6 overflow-y-auto overscroll-contain bg-paper p-6 text-ink shadow-[0_0_80px_oklch(0.122_0.009_268.083_/_0.6)] sm:p-8', leaving ? 'drawer-out' : 'drawer-in')}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="flex items-center gap-2 font-mono text-[0.75rem] uppercase tracking-[0.12em] text-ink-2"><Graph size={14} weight="bold" />Qloo evidence</p>
-            <h2 className="mt-2 font-narrow text-[1.75rem] font-semibold uppercase leading-[1.05]">{clash.acts[0]} × {clash.acts[1]}</h2>
+            <h2 className="font-narrow text-[1.75rem] font-semibold uppercase leading-[1.05]">{clash.acts[0]} × {clash.acts[1]}</h2>
             <p className="mt-2 text-[0.9375rem] leading-6 text-ink-2">
-              They overlap for {clash.overlapMinutes} minutes. Pair weight {clash.weight == null ? 'unknown' : clash.weight.toFixed(2)}: the mean of both directions below, where 0.90 or more is a strong link.
+              {clash.overlapMinutes} min overlap · pair weight {clash.weight == null ? 'unknown' : clash.weight.toFixed(2)}, strong at 0.90 or more
             </p>
           </div>
           <button ref={close} type="button" onClick={dismiss} aria-label="Close the evidence" className="grid size-10 shrink-0 place-items-center rounded-[3px] border border-ink/20 transition-[background-color,scale] duration-150 hover:bg-ink/5 active:scale-[0.96]"><X size={16} weight="bold" /></button>
@@ -82,7 +81,7 @@ export function EvidenceDrawer({ runId, clash, onClose }: { runId: string; clash
             <p className="mt-2 font-mono text-[0.75rem] text-ink-2">Saved Qloo snapshot, fetched {date(d.fetched)}</p>
           </section>
         ))}
-        <p className="mt-auto text-[0.8125rem] leading-5 text-ink-2">Affinity is Qloo’s taste-graph signal, ranked within each act’s row. It is not a count of shared ticket holders.</p>
+        <p className="mt-auto text-[0.8125rem] leading-5 text-ink-2">Affinity is a taste-graph signal, not a count of shared ticket holders.</p>
       </aside>
     </div>
   );
