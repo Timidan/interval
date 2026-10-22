@@ -38,7 +38,10 @@ with a plain reason before contacting Hermes; daily/visitor limits include the
 next UTC midnight as `retry_at`, while the work budget has no automatic retry.
 Otherwise it reads Hermes `/healthz` without spending a model call and returns
 only status, model, effort and `retry_at` (Unix seconds), plus a safe reason when
-available. Hermes requests are single turn `{system,user}` with a 180-second
+available. Hermes reports `unavailable` after a failed call, and `unknown` after a
+usage limit resets, until a call succeeds; Interval reports `unknown` and any
+`unavailable` older than ten minutes as `available`, so the next request tries
+again instead of the agent staying off. Hermes requests are single turn `{system,user}` with a 180-second
 timeout. An atomic private SQLite lease permits only one Interval completion at
 a time across this API and local scripts. Concurrent work gets an unavailable
 response rather than issuing a second completion. A transport failure retains

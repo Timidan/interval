@@ -50,11 +50,11 @@ test('agent drops unsupported claims and fails closed after one strict JSON corr
   db.prepare('DELETE FROM runs WHERE id=?').run(run.id);
 });
 
-test('agent health reports the local work limit before contacting Hermes', async () => {
+test('agent health reports the local work limit before contacting Hermes, and retries a stale Hermes failure', async () => {
   const { health } = await import('./llm.mjs');
   const { db } = await import('./qloo.mjs');
   const { randomUUID } = await import('node:crypto');
-  const budget = randomUUID(), originalFetch = globalThis.fetch;
+  const budget = randomUUID(), originalFetch = globalThis.fetch, originalUrl = process.env.HERMES_URL;
   let fetches = 0;
   globalThis.fetch = async () => { fetches++; throw new Error('No external calls allowed'); };
   db.exec('BEGIN');
@@ -66,7 +66,15 @@ test('agent health reports the local work limit before contacting Hermes', async
     assert.match(status.reason, /work budget exhausted/);
     assert.equal(status.retry_at, null);
     assert.equal(fetches, 0);
-  } finally { db.exec('ROLLBACK'); globalThis.fetch = originalFetch; }
+    process.env.HERMES_URL = 'http://hermes.test'; db.prepare("DELETE FROM llm_state WHERE id='limited'").run();
+    for (const [minutes, expected] of [[11, 'available'], [1, 'unavailable']]) {
+      globalThis.fetch = async () => Response.json({ status: 'unavailable', model: 'm', effort: 'e', updated_at: new Date(Date.now() - minutes * 60000).toISOString() });
+      assert.equal((await health('test', randomUUID())).status, expected);
+    }
+  } finally {
+    db.exec('ROLLBACK'); globalThis.fetch = originalFetch;
+    if (originalUrl === undefined) delete process.env.HERMES_URL; else process.env.HERMES_URL = originalUrl;
+  }
 });
 
 test('proxy handling, local health and scoring gate make no external calls', async () => {

@@ -62,7 +62,7 @@ function searchSlot() {
   if (activeSearches < maxSearches) { activeSearches++; return Promise.resolve(); }
   return new Promise((resolve, reject) => {
     const start = () => { clearTimeout(timer); resolve(); };
-    const timer = setTimeout(() => { queued.splice(queued.indexOf(start), 1); reject(fail(503, 'Interval stayed busy with other searches, so this search didn’t start.')); }, 45000);
+    const timer = setTimeout(() => { const i = queued.indexOf(start); if (i >= 0) queued.splice(i, 1); reject(fail(503, 'Interval stayed busy with other searches, so this search didn’t start.')); }, 45000);
     queued.push(start);
   });
 }

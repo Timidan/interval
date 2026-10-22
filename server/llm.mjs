@@ -29,7 +29,9 @@ export async function health(visitor, budget = workBudget()) {
     const response = await fetch(`${url()}/healthz`, { signal: AbortSignal.timeout(10000), redirect: 'error' });
     const body = await response.json();
     if (!response.ok || !['available', 'limited', 'unavailable', 'unknown'].includes(body.status)) throw 0;
-    const safe = { status: body.status, model: body.model, effort: body.effort, retry_at: Number.isFinite(body.retry_at) ? body.retry_at : null };
+    // Hermes keeps reporting a failure (or "unknown" after a limit resets) until a call succeeds, so a stale one lets the next request try.
+    const retry = body.status === 'unknown' || (body.status === 'unavailable' && Date.parse(body.updated_at) < Date.now() - 600000);
+    const safe = { status: retry ? 'available' : body.status, model: body.model, effort: body.effort, retry_at: Number.isFinite(body.retry_at) ? body.retry_at : null };
     if (safe.status === 'limited') set('limited', { retry_at: safe.retry_at, reason: 'Hermes shared usage limit reached' });
     return safe;
   } catch { return { status: 'unavailable', reason: 'Agent unavailable: Hermes health check failed', retry_at: null }; }
