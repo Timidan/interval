@@ -248,9 +248,12 @@ const server = createServer(async (req, res) => {
         if (input.type === 'baseline' && input.kind === 'llm_only') throw fail(409, 'Read prepared LLM comparisons through the agent; generation uses the isolated baseline script');
         if (input.type === 'baseline' && (input.kind !== 'genre_only' || run.origin !== 'acl-friday')) throw fail(409, 'Genre comparison is only prepared for ACL Friday');
         if (input.unknownGuard != null && !['pair', 'net'].includes(input.unknownGuard)) throw fail(400, 'Invalid unknown guard');
-        const weights = input.type === 'baseline'
-          ? weightsFromRows(JSON.parse(readFileSync('cache/probes/genre-baseline.json', 'utf8')).rows).weights
-          : run.snapshot.weights;
+        let weights = run.snapshot.weights;
+        if (input.type === 'baseline') {
+          checkSearchCapacity();
+          try { weights = weightsFromRows(JSON.parse(readFileSync('cache/probes/genre-baseline.json', 'utf8')).rows).weights; }
+          catch { throw fail(409, 'The genre comparison is unavailable on this server.'); }
+        }
         // Start/reserve synchronously, before changing any run state.
         const searching = searchWorker(run, weights, { guardWeights: run.snapshot.weights,
           seed: input.type === 'baseline' ? 20261013 : input.seed || 20261013,
