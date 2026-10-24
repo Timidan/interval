@@ -60,11 +60,22 @@ export function Sheet({ sets, stages, clashIds, ghosts, variant = 'full', emphas
     return () => { ro.disconnect(); window.removeEventListener('load', measure); window.removeEventListener('resize', measure); };
   }, []);
 
-  const fit = width ? (width - size.label) / (end - start) : 0.5;
+  const labelW = interactive && width && width < 480 ? Math.min(size.label, 96) : size.label; // phones get more timeline
+  const fit = width ? (width - labelW) / (end - start) : 0.5;
   const origin = view?.start ?? start;
-  const ppm = view ? Math.max(0.35, (width - size.label) / (view.end - view.start)) : size.fit ? Math.max(0.35, fit) : Math.max(2.2, fit);
-  const timeline = view ? Math.max(0, width - size.label) : (end - start) * ppm;
+  const ppm = view ? Math.max(0.35, (width - labelW) / (view.end - view.start)) : size.fit ? Math.max(0.35, fit) : Math.max(2.2, fit);
+  const timeline = view ? Math.max(0, width - labelW) : (end - start) * ppm;
   const hours = Math.round((end - start) / 60);
+
+  // Open on the first strong clash when it starts off-screen (phones, and late-night clashes on long days).
+  const opened = useRef(false);
+  useEffect(() => {
+    const el = wrap.current, first = sets.filter(s => clashIds?.has(s.id)).sort((a, b) => a.start - b.start)[0];
+    if (!interactive || !el || !width || !first || opened.current) return;
+    opened.current = true;
+    const left = labelW + x(first.start), right = left + (first.end - first.start) * ppm;
+    if (left < el.scrollLeft + labelW || right > el.scrollLeft + el.clientWidth) el.scrollLeft = Math.max(0, left - labelW - (el.clientWidth - labelW) / 3);
+  }, [width, clashIds?.size]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [hover, setHover] = useState<string | null>(null);
   const activeId = hover ?? pinned ?? focusId;
@@ -123,9 +134,9 @@ export function Sheet({ sets, stages, clashIds, ghosts, variant = 'full', emphas
   return (
     <div className={cn('paper text-ink', className)}>
       <div ref={wrap} className={cn('relative', interactive && 'overflow-x-auto overscroll-x-contain')}>
-        <div className="relative" style={{ width: size.label + timeline }}>
+        <div className="relative" style={{ width: labelW + timeline }}>
           <div className="flex" style={{ height: size.ruler }}>
-            <div className={cn('shrink-0', interactive && 'sticky start-0 z-20 bg-paper')} style={{ width: size.label }} />
+            <div className={cn('shrink-0', interactive && 'sticky start-0 z-20 bg-paper')} style={{ width: labelW }} />
             <div className={cn('relative', view && 'overflow-hidden')} style={{ width: timeline }}>
               {Array.from({ length: hours + 1 }, (_, i) => i).filter(i => 60 * ppm >= 40 || i % 2 === 0).map(i => (
                 <span key={i} className={cn('absolute top-0 text-[0.6875rem] font-medium text-ink-2/75 tabular-nums whitespace-nowrap transition-[left]', ZOOM, i === 0 && !view ? '' : '-translate-x-1/2')}
@@ -136,7 +147,7 @@ export function Sheet({ sets, stages, clashIds, ghosts, variant = 'full', emphas
           {stages.map(st => (
             <div key={st} className="flex border-t border-paper-line" style={{ height: size.row }}>
               <div className={cn('flex shrink-0 items-center pe-3 font-medium leading-[1.15] text-ink-2', interactive ? 'sticky start-0 z-20 bg-paper text-[0.8125rem]' : 'text-[0.75rem]')}
-                style={{ width: size.label }}>{st}</div>
+                style={{ width: labelW }}>{st}</div>
               <div className={cn('relative transition-[background-size,background-position]', ZOOM, view && '[clip-path:inset(-12px_0_-12px_0)]')} style={{ width: timeline, ...grid }}>
                 {ghosts?.filter(g => g.stage === st).map(g => (
                   <span key={`ghost-${g.id}`} aria-hidden="true" className={cn('pointer-events-none absolute top-1 bottom-1 rounded-[7px] border-[1.5px] border-dashed border-cue/75 transition-[left,width]', ZOOM)}

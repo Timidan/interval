@@ -37,12 +37,14 @@ export function ImportPage() {
   return (
     <div className="relative min-h-[100dvh]">
       <StageBackground dim={0.78} />
-      <header className="rise mx-auto flex max-w-3xl items-center gap-5 px-5 pt-5" style={{ '--i': 0 } as React.CSSProperties}>
+      <header className="rise mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-5 pt-5" style={{ '--i': 0 } as React.CSSProperties}>
         <a href="/" className="inline-flex items-center gap-2.5 font-display text-[1rem] font-extrabold uppercase tracking-[0.06em] text-chalk">
           <ArrowLeft size={16} weight="bold" className="text-chalk-2" />Interval
         </a>
-        {runId && <a href="/import" className="ms-auto text-[0.875rem] text-chalk-2 underline decoration-chalk/30 underline-offset-4 hover:text-chalk">Start over</a>}
-        <a href="/sheet" className={cn(!runId && 'ms-auto', 'text-[0.875rem] text-chalk-2 underline decoration-chalk/30 underline-offset-4 hover:text-chalk')}>Sample festivals</a>
+        <nav className="ms-auto flex gap-5 whitespace-nowrap text-[0.875rem] text-chalk-2">
+          {runId && <a href="/import" className="underline decoration-chalk/30 underline-offset-4 hover:text-chalk">Start over</a>}
+          <a href="/sheet" className="underline decoration-chalk/30 underline-offset-4 hover:text-chalk">Sample festivals</a>
+        </nav>
       </header>
       <main className="rise mx-auto mt-10 max-w-3xl space-y-5 px-5 pb-24" style={{ '--i': 1 } as React.CSSProperties}>
         <div>
