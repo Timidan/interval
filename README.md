@@ -1,5 +1,7 @@
 # Interval
 
+![Interval’s front page: the ACL Friday running order beside a clash warning on Paris Paloma and CMAT](public/og.jpg)
+
 Interval helps festival programmers fix draft running orders: Qloo’s taste graph flags linked acts that clash, and Interval proposes a few tested changes that keep every hold.
 
 Two sets on different stages at the same time are normal. The overlaps that cost a festival are the ones between acts whose audiences overlap too, because those fans have to pick one. Interval finds those pairs with Qloo, then searches for at most four moved sets that remove them without breaking a single hold, and shows the evidence behind every warning.
@@ -11,7 +13,7 @@ Two sets on different stages at the same time are normal. The overlaps that cost
 1. Open the running order. Austin City Limits 2026, Weekend 1, Friday: 32 sets on 8 stages, drawn as stages by time. One strong clash is marked: Paris Paloma and CMAT overlap for 15 minutes, and Qloo links them strongly.
 2. Select **Repair running order**. Moving Paris Paloma 15 minutes later clears the clash, from 14 Qloo-weighted clash minutes to 0, with every hold kept. Interval also offers a second change when it finds one.
 3. The tested change is drawn on the grid before you apply it, with dashed outlines where the moved sets play now. Apply it, then undo it.
-4. Select **Evidence** on the clash: both directed Qloo scores, the request behind them and the row they came from. Below, one table compares the published timetable, three LLM-only repairs, a genre-only repair and Interval on the same metric.
+4. Select **See Qloo evidence** on the clash: both directed Qloo scores, the request behind them and the row they came from. Below, one table compares the published timetable, three LLM-only repairs, a genre-only repair and Interval on the same metric.
 5. Switch to III Points (two days, 13 stages), or **Import a draft**: paste your own running order as CSV, confirm the artist matches, see how many Qloo calls scoring needs, and run it.
 
 ## How it works
@@ -54,7 +56,7 @@ npm install
 npm run dev:all
 ```
 
-Then open http://127.0.0.1:4190. The API needs a Qloo hackathon key in `~/.config/interval/qloo.env` (`QLOO_BASE_URL=https://hackathon.api.qloo.com` and `QLOO_API_KEY=…`). Qloo responses are cached in `cache/`, which is never committed; set `QLOO_OFFLINE=1` to serve only cached evidence. The agent needs `HERMES_URL`; without it, the panel says live answers are unavailable. `server/README.md` documents the API, budgets and guard rules, and `deploy/` holds the container setup for the hosted demo.
+Then open http://127.0.0.1:4190. The API needs a Qloo hackathon key in `~/.config/interval/qloo.env` (`QLOO_BASE_URL=https://hackathon.api.qloo.com` and `QLOO_API_KEY=…`). Qloo responses are cached in `cache/`, which is never committed; set `QLOO_OFFLINE=1` to serve only cached evidence. A fresh clone has no cache, so the sample festivals show clash measures as unavailable until you score with your own key; the live demo has the saved evidence. The agent needs `HERMES_URL`; without it, the panel says live answers are unavailable. `server/README.md` documents the API, budgets and guard rules, and `deploy/` holds the container setup for the hosted demo.
 
 CSV import columns: `day, stage, act, start, end`, with optional `hold` (day, stage, start or exact), `band` (opener, middle, sub-headline or headline) and `tier` (1–100). Up to 150 sets and 60 acts. Comma, semicolon and tab separators all work, as does Excel’s CSV UTF-8 export. Times can be `19:30`, `7:30 PM` or `19:30:00`; a set that ends after midnight takes a dated end such as `2026-10-03T01:00`.
 
